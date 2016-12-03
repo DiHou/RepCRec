@@ -9,7 +9,7 @@ class Transaction {
   final boolean isReadOnly;
   TransactionManager manager;
   ArrayList<LockInfo> locksHolding;
-  HashMap<String, int[]> snapshot;
+  HashMap<String, int[]> dbSnapshot;
 
   Transaction(String name, int initTime, boolean readOnly, TransactionManager manager) {
     this.name = name;
@@ -24,7 +24,7 @@ class Transaction {
   }
   
   private void createDatabaseSnapshot() {
-    this.snapshot = new HashMap<>();
+    this.dbSnapshot = new HashMap<>();
     
     for (int i = 1; i <= 20; i++) {
       String item = "x" + i;
@@ -32,7 +32,7 @@ class Transaction {
       
       for (int j = 0; j < sites.length; j++) {
         if (sites[j].database.containsKey(item)) {
-          snapshot.put(item, new int[] {sites[j].database.get(item).value, j + 1});
+          dbSnapshot.put(item, new int[] {sites[j].database.get(item).value, j + 1});
           break;
         }
       }
@@ -40,7 +40,7 @@ class Transaction {
   }
   
   /**
-   * actually commit write operations when a transaction commits
+   * Actually commit write operations when a transaction commits.
    */
   void commitWrites() {
     for (LockInfo lockInfo : locksHolding) {

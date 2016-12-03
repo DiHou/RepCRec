@@ -43,9 +43,9 @@ class TransactionManager {
     }
     
     if (transaction.isReadOnly) {
-      if (transaction.snapshot.containsKey(key)) {
+      if (transaction.dbSnapshot.containsKey(key)) {
         System.out.print("Read by " + transaction.name + ", ");
-        int[] valueInfo = transaction.snapshot.get(key);
+        int[] valueInfo = transaction.dbSnapshot.get(key);
         print(key, valueInfo[0], valueInfo[1]);
       } else {
         abort(transaction);
@@ -60,7 +60,7 @@ class TransactionManager {
           
           // Need to check if the variable is ready for read, and make sure it does not have a 
           // write lock on it
-          if (itemInfo.isReadyForRead && !itemInfo.hasWriteLock()) {
+          if (itemInfo.isReadyForRead && !itemInfo.isWriteLocked()) {
             // Get a new lock and put it inside the lock list of that variable
             LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
             
@@ -131,10 +131,9 @@ class TransactionManager {
       return;
     }
     
-    int i = 0;
     boolean shouldAbort = true;
     
-    for (; i < sites.length; i++) {
+    for (int i = 0; i < sites.length; i++) {
       // need to check if the variable is ready for read,
       // and make sure it does not have any lock on it (except for the lock held by itself)
       if (!sites[i].isDown && sites[i].database.containsKey(key)) {

@@ -3,13 +3,6 @@ package edu.nyu.adb.repcrec;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The Variable class is contains all the functions and variables needed for the
- * variables for the distributed database, including the locks. The lockList in
- * it lists of all the locks currently placed on this (copy of); the waitList in
- * it lists of all the locks which will be placed on this (copy of) variable,
- * currently are waiting for other locks to release.
- */
 class ItemInfo {
   String key;
   int value;
@@ -26,18 +19,13 @@ class ItemInfo {
   }
   
   /**
-   * if the variable has write lock
-   * 
-   * when a transaction wants to read, it needs to examine if there is write
-   * lock on this variable before examination, make sure all the locks in the
-   * lock list are active (remove the locks which have been released due to
-   * the end of a transaction or the failure of a site)
-   * 
-   * @return boolean if the variable has write lock
+   * when a transaction wants to read, it needs to examine if there is write lock on this variable 
+   * before examination, make sure all the locks in the lock list are active (remove the locks 
+   * which have been released due to the end of a transaction or the failure of a site)
    */
-  boolean hasWriteLock() {
+  boolean isWriteLocked() {
     cleanLock();
-
+    
     // Normally if there's a write lock, it must be the first and only lock in the
     // lock list. But if one transaction wants to have a read lock and then a write lock on the same 
     // variable, it might be able to get both at the same time, so the lock list might contain
@@ -50,9 +38,6 @@ class ItemInfo {
     return false;
   }
   
-  /**
-   * if a variable has write lock, return that write lock
-   */
   LockInfo getWriteLock() {
     cleanLock();
     for (LockInfo lock: lockList) {
@@ -71,10 +56,9 @@ class ItemInfo {
   /**
    * clean lock
    * 
-   * when a transaction ends or a site fails, the lock release process will be
-   * triggered from the corresponding objects, so a lock which has been
-   * released will be marked as inactive but still exist in the variable lock
-   * list, such locks should be removed whenever the variable object is
+   * when a transaction ends or a site fails, the lock release process will be triggered from the 
+   * corresponding objects, so a lock which has been released will be marked as inactive but still 
+   * exist in the variable lock list, such locks should be removed whenever the variable object is
    * visited
    */
   void cleanLock() {
@@ -113,12 +97,9 @@ class ItemInfo {
   /**
    * check if a transaction can wait
    * 
-   * for efficiency, there is no need to add a lock to the wait list if there
-   * exists an older transaction, so the time stamps of the transactions in
-   * the wait list should be in strict decreasing order
-   * 
-   * @param transaction
-   * @return boolean if a transaction can wait
+   * for efficiency, there is no need to add a lock to the wait list if there exists an older 
+   * transaction, so the time stamps of the transactions in the wait list should be in strict 
+   * decreasing order
    */
   boolean canWait(Transaction t) {
     cleanWaitList();
@@ -126,11 +107,8 @@ class ItemInfo {
   }
   
   /**
-   * update
-   * 
-   * whenever a lock on this variable is released, update the lock list and
-   * check if locks in the wait list also should be moved to the active lock
-   * list
+   * whenever a lock on this variable is released, update the lock list and check if locks in the 
+   * wait list also should be moved to the active lock list
    */
   void update() {
     cleanLock();
@@ -146,14 +124,12 @@ class ItemInfo {
           waitList.remove(0);
         }
       } else {
-        while (waitList.size() > 0
-            && waitList.get(0).lockType == LockType.READ) {
+        while (waitList.size() > 0 && waitList.get(0).lockType == LockType.READ) {
           LockInfo lock = waitList.get(0);
           lockList.add(lock);
           waitList.remove(0);
           
-          System.out.print("Read by "
-              + lock.transaction.name + ", ");
+          System.out.print("Read by " + lock.transaction.name + ", ");
           print(lock.itemInfo.key, lock.itemInfo.value, lock.site.siteID);
         }
       }
