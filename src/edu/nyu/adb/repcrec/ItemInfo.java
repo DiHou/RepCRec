@@ -1,14 +1,13 @@
 package edu.nyu.adb.repcrec;
 
 import java.util.ArrayList;
-import java.util.List;
 
 class ItemInfo {
   String key;
   int value;
   boolean isReadyForRead;
-  List<LockInfo> lockList;
-  List<LockInfo> waitList;
+  ArrayList<LockInfo> lockList;
+  ArrayList<LockInfo> waitList;
 
   ItemInfo(String name, int value) {
     this.key = name;
@@ -89,7 +88,7 @@ class ItemInfo {
     }
   }
 
-  List<LockInfo> getLockList() {
+  ArrayList<LockInfo> getLockList() {
     cleanLock();
     return lockList;
   }

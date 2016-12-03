@@ -2,6 +2,7 @@ package edu.nyu.adb.repcrec;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 class SimulatedSite {
@@ -9,6 +10,7 @@ class SimulatedSite {
   final TransactionManager manager;
   HashMap<String, ItemInfo> database;
   List<LockInfo> lockTable;
+  HashSet<Conflict> conflicts;
   boolean isDown;
   //List<Lock> waitForReadyReadTable; // if necessary, store all the read transactions waiting for the variable to become ready
 
@@ -17,6 +19,7 @@ class SimulatedSite {
     this.manager = manager;
     this.database = new HashMap<String, ItemInfo>();
     this.lockTable = new ArrayList<LockInfo>();
+    this.conflicts = new HashSet<>();
     this.isDown = false;
   }
   

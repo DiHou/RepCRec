@@ -1,5 +1,7 @@
 package edu.nyu.adb.repcrec;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -66,28 +68,30 @@ class TransactionManager {
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
           
           itemInfo.lockList.add(lock);
-          sites[i].addLock(lock);
           transaction.locksHolding.add(lock);
+          sites[i].addLock(lock);
           
           System.out.print("Read by " + transaction.name + ", ");
           print(itemInfo.key, itemInfo.value, i + 1);
           return;
         } else if (itemInfo.isReadyForRead) {  // item is write locked
-          // if it is locked by itself
-          if (itemInfo.getWriteLock().transaction.name.equals(transaction.name)) {
+          LockInfo writeLock = itemInfo.getWriteLock();
+          if (writeLock.transaction.name.equals(transaction.name)) {  // locked by self
             LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
             
             itemInfo.lockList.add(lock);
-            sites[i].addLock(lock);
             transaction.locksHolding.add(lock);
+            sites[i].addLock(lock);
+            
             System.out.print("Read by " + transaction.name + ", ");
             print(itemInfo.key, itemInfo.getWriteLock().value, itemInfo.getWriteLock().site.siteID);
           } else {
             LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
             
             itemInfo.waitList.add(lock);
-            sites[i].addLock(lock);
             transaction.locksHolding.add(lock);
+            sites[i].addLock(lock);
+            sites[i].conflicts.add(new Conflict(transactionName, writeLock.transaction.name));
           }
           return;
         }
@@ -139,7 +143,7 @@ class TransactionManager {
           transaction.locksHolding.add(lock);
 //          shouldAbort = false;
         } else {
-          List<LockInfo> lockList = itemInfo.getLockList();
+          ArrayList<LockInfo> lockList = itemInfo.getLockList();
           
           // Check whether only itself owns the lock.
           boolean lockOnlyOwnedBySelf = true;
@@ -172,8 +176,11 @@ class TransactionManager {
             itemInfo.waitList.add(lock); 
           }
           
-          sites[i].addLock(lock);
           transaction.locksHolding.add(lock);
+          sites[i].addLock(lock);
+          for (int j = 0; j < lockListSize; j++) {
+            sites[i].conflicts.add(new Conflict(transactionName, lockList.get(j).transaction.name));
+          }
 //          shouldAbort = false;
         }
       }
@@ -229,7 +236,9 @@ class TransactionManager {
   HashSet<Conflict> constructConflicts() {
     HashSet<Conflict> result = new HashSet<>();
     
-    
+    for (int i = 0; i < sites.length; i++) {
+      result.addAll(sites[i].conflicts);
+    }
     
     return result;
   }
