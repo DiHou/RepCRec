@@ -20,9 +20,9 @@ class ItemInfo {
   ItemInfo(String name, int value) {
     this.key = name;
     this.value = value;
-    isReadyForRead = true;
-    lockList = new ArrayList<LockInfo>();
-    waitList = new ArrayList<LockInfo>();
+    this.isReadyForRead = true;
+    this.lockList = new ArrayList<LockInfo>();
+    this.waitList = new ArrayList<LockInfo>();
   }
   
   /**
@@ -52,8 +52,6 @@ class ItemInfo {
   
   /**
    * if a variable has write lock, return that write lock
-   * 
-   * @return the write lock if the variable does have one
    */
   LockInfo getWriteLock() {
     cleanLock();
@@ -65,11 +63,6 @@ class ItemInfo {
     return null;
   }
 
-  /**
-   * hasLock
-   * 
-   * @return boolean if has lock
-   */
   boolean hasLock() {
     cleanLock();
     return lockList.size() != 0;
@@ -98,11 +91,10 @@ class ItemInfo {
   /**
    * clean wait
    * 
-   * if a lock is in the wait list and is never acquired because the
-   * transaction aborts or the site fails, it should be removed from the wait
-   * list
+   * if a lock is in the wait list and is never acquired because the transaction aborts or the site 
+   * fails, it should be removed from the waitList
    */
-  void cleanWait() {
+  void cleanWaitList() {
     for (int i = 0; i < waitList.size();) {
       LockInfo lock = waitList.get(i);
       if (!lock.isActive) {
@@ -113,11 +105,6 @@ class ItemInfo {
     }
   }
 
-  /**
-   * lockList getter
-   * 
-   * @return LockList
-   */
   List<LockInfo> getLockList() {
     cleanLock();
     return lockList;
@@ -134,9 +121,8 @@ class ItemInfo {
    * @return boolean if a transaction can wait
    */
   boolean canWait(Transaction t) {
-    cleanWait();
-    return waitList.isEmpty()
-        || waitList.get(waitList.size() - 1).transaction.initTime > t.initTime;
+    cleanWaitList();
+    return waitList.isEmpty() || waitList.get(waitList.size() - 1).transaction.initTime > t.initTime;
   }
   
   /**
@@ -148,7 +134,7 @@ class ItemInfo {
    */
   void update() {
     cleanLock();
-    cleanWait();
+    cleanWaitList();
     
     if (lockList.size() == 0 && waitList.size() > 0) {
       if (waitList.get(0).lockType == LockType.WRITE) {

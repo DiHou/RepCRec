@@ -5,7 +5,7 @@ class LockInfo {
   ItemInfo itemInfo;
   SimulatedSite site;
   LockType lockType;
-  int value;  // the value to be written for the write lock
+  int value;  // the value to write for the write lock
   boolean isActive;
   
   /**

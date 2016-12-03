@@ -27,9 +27,6 @@ class TransactionManager {
     }
   }
 
-  /**
-   * determine whether a variable is replicated
-   */
   boolean isReplicated(String name) {
     int index = Integer.parseInt(name.substring(1, name.length()));
     return index % 2 == 0 ? true : false;

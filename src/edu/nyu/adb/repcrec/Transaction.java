@@ -24,7 +24,8 @@ class Transaction {
   }
   
   private void createDatabaseSnapshot() {
-    snapshot = new HashMap<>();
+    this.snapshot = new HashMap<>();
+    
     for (int i = 1; i <= 20; i++) {
       String item = "x" + i;
       SimulatedSite[] sites = manager.sites;
