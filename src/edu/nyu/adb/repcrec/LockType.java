@@ -1,6 +1,6 @@
 package edu.nyu.adb.repcrec;
 
-public enum LockType {
+enum LockType {
   
   READ,
   WRITE

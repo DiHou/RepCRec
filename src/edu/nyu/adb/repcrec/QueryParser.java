@@ -12,7 +12,7 @@ class QueryParser {
     this.manager = manager;
   }
   
-  public void startParsing(String file) {
+  void startParsing(String file) {
     String readLine = null;
     
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {

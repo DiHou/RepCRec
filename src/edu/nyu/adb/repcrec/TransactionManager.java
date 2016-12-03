@@ -3,11 +3,11 @@ package edu.nyu.adb.repcrec;
 import java.util.HashMap;
 import java.util.List;
 
-public class TransactionManager {
+class TransactionManager {
   HashMap<String, Transaction> transactionMapping;
   SimulatedSite[] sites;
 
-  public void initialize() {
+  void initialize() {
     transactionMapping = new HashMap<String, Transaction>();
     sites = new SimulatedSite[10];
     
@@ -30,16 +30,16 @@ public class TransactionManager {
   /**
    * determine whether a variable is replicated
    */
-  public boolean isReplicated(String name) {
+  boolean isReplicated(String name) {
     int index = Integer.parseInt(name.substring(1, name.length()));
     return index % 2 == 0 ? true : false;
   }
 
-  public void begin(String name, int time, boolean isReadOnly) {
+  void begin(String name, int time, boolean isReadOnly) {
     transactionMapping.put(name, new Transaction(name, time, isReadOnly, this));
   }
 
-  public void read(String transactionName, String key) {
+  void read(String transactionName, String key) {
     Transaction transaction = transactionMapping.get(transactionName);
     if (transaction == null) {
       return;
@@ -67,7 +67,7 @@ public class TransactionManager {
             // Get a new lock and put it inside the lock list of that variable
             LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
             
-            itemInfo.addLock(lock);
+            itemInfo.lockList.add(lock);
             sites[i].addLock(lock);
             transaction.locksHolding.add(lock);
             
@@ -86,7 +86,7 @@ public class TransactionManager {
             if (itemInfo.getWriteLock().transaction.name.equals(transaction.name)) {
               LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
               
-              itemInfo.addLock(lock);
+              itemInfo.lockList.add(lock);
               sites[i].addLock(lock);
               transaction.locksHolding.add(lock);
               System.out.print("Read by " + transaction.name + ", ");
@@ -115,7 +115,7 @@ public class TransactionManager {
                   0, true); 
               sites[pos].addLock(lock);
               transaction.locksHolding.add(lock);
-              sites[pos].database.get(key).addLock(lock);
+              sites[pos].database.get(key).lockList.add(lock);
               break;
             } 
           }
@@ -127,7 +127,7 @@ public class TransactionManager {
     }
   }
 
-  public void write(String transactionName, String key, int value) {
+  void write(String transactionName, String key, int value) {
     Transaction transaction = transactionMapping.get(transactionName);
     
     if (transaction == null) {
@@ -145,7 +145,7 @@ public class TransactionManager {
         if (!itemInfo.hasLock()) {
           // if it does not have lock, get a new lock
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
-          itemInfo.addLock(lock);
+          itemInfo.lockList.add(lock);
           sites[i].addLock(lock);
           transaction.locksHolding.add(lock);
           shouldAbort = false;
@@ -176,7 +176,7 @@ public class TransactionManager {
           // get a new lock and put it in the lock list or wait list
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           if (pos == lockList.size()) {
-              itemInfo.addLock(lock);
+              itemInfo.lockList.add(lock);
           }
           else {
             itemInfo.waitList.add(lock); 
@@ -196,7 +196,7 @@ public class TransactionManager {
                 value, true); 
             sites[pos].addLock(lock);
             transaction.locksHolding.add(lock);
-            sites[pos].database.get(key).addLock(lock);
+            sites[pos].database.get(key).lockList.add(lock);
             break;
           } 
         }
@@ -207,11 +207,11 @@ public class TransactionManager {
     }
   }
 
-  public void abort(Transaction transaction) {
+  void abort(Transaction transaction) {
     end(transaction, false);
   }
 
-  public void end(Transaction transaction, boolean toCommit) {
+  void end(Transaction transaction, boolean toCommit) {
     if (transaction == null || !transactionMapping.containsKey(transaction.name)) {
       return;
     }
@@ -227,18 +227,18 @@ public class TransactionManager {
     transactionMapping.remove(transaction.name);
   }
 
-  public void fail(int siteNumber) {
+  void fail(int siteNumber) {
     sites[siteNumber - 1].fail();
   }
 
-  public void recover(int siteNumber) {
+  void recover(int siteNumber) {
     sites[siteNumber - 1].recover();
   }
 
   /**
    * dump all items in each site
    */
-  public void dump() {
+  void dump() {
     for (int i = 0; i < sites.length; i++) {
       sites[i].dump();
       System.out.println();
@@ -248,14 +248,14 @@ public class TransactionManager {
   /**
    * dump a specific item in each site
    */
-  public void dump(String key) {
+  void dump(String key) {
     for (int i = 0; i < sites.length; i++) {
       sites[i].dump(key);
     }
   }
   
 
-  public void print(String item, int value, int siteNumber) {
+  void print(String item, int value, int siteNumber) {
     System.out.println(item + ": " + value + " at site " + siteNumber);
   }
 }

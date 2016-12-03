@@ -10,14 +10,14 @@ import java.util.List;
  * it lists of all the locks which will be placed on this (copy of) variable,
  * currently are waiting for other locks to release.
  */
-public class ItemInfo {
+class ItemInfo {
   String key;
   int value;
   boolean isReadyForRead;
   List<LockInfo> lockList;
   List<LockInfo> waitList;
 
-  public ItemInfo(String name, int value) {
+  ItemInfo(String name, int value) {
     this.key = name;
     this.value = value;
     isReadyForRead = true;
@@ -35,7 +35,7 @@ public class ItemInfo {
    * 
    * @return boolean if the variable has write lock
    */
-  public boolean hasWriteLock() {
+  boolean hasWriteLock() {
     cleanLock();
 
     // Normally if there's a write lock, it must be the first and only lock in the
@@ -55,7 +55,7 @@ public class ItemInfo {
    * 
    * @return the write lock if the variable does have one
    */
-  public LockInfo getWriteLock() {
+  LockInfo getWriteLock() {
     cleanLock();
     for (LockInfo lock: lockList) {
       if (lock.lockType == LockType.WRITE) {
@@ -70,7 +70,7 @@ public class ItemInfo {
    * 
    * @return boolean if has lock
    */
-  public boolean hasLock() {
+  boolean hasLock() {
     cleanLock();
     return lockList.size() != 0;
   }
@@ -84,7 +84,7 @@ public class ItemInfo {
    * list, such locks should be removed whenever the variable object is
    * visited
    */
-  public void cleanLock() {
+  void cleanLock() {
     for (int i = 0; i < lockList.size();) {
       LockInfo lock = lockList.get(i);
       if (!lock.isActive) {
@@ -102,7 +102,7 @@ public class ItemInfo {
    * transaction aborts or the site fails, it should be removed from the wait
    * list
    */
-  public void cleanWait() {
+  void cleanWait() {
     for (int i = 0; i < waitList.size();) {
       LockInfo lock = waitList.get(i);
       if (!lock.isActive) {
@@ -113,16 +113,12 @@ public class ItemInfo {
     }
   }
 
-  public void addLock(LockInfo lock) {
-    lockList.add(lock);
-  }
-
   /**
    * lockList getter
    * 
    * @return LockList
    */
-  public List<LockInfo> getLockList() {
+  List<LockInfo> getLockList() {
     cleanLock();
     return lockList;
   }
@@ -137,7 +133,7 @@ public class ItemInfo {
    * @param transaction
    * @return boolean if a transaction can wait
    */
-  public boolean canWait(Transaction t) {
+  boolean canWait(Transaction t) {
     cleanWait();
     return waitList.isEmpty()
         || waitList.get(waitList.size() - 1).transaction.initTime > t.initTime;
@@ -150,7 +146,7 @@ public class ItemInfo {
    * check if locks in the wait list also should be moved to the active lock
    * list
    */
-  public void update() {
+  void update() {
     cleanLock();
     cleanWait();
     
@@ -178,7 +174,7 @@ public class ItemInfo {
     }
   }
   
-  public void print(String key, int value, int siteNumber) {
+  void print(String key, int value, int siteNumber) {
     System.out.println(key + ": " + value + " at site " + siteNumber);
   }
 }

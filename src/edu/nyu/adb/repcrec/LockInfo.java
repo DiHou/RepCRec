@@ -14,7 +14,7 @@ class LockInfo {
    * easily handle the cases when a site is failed or a transaction aborts by
    * simply marking the lock as inactive
    */
-  public LockInfo(Transaction transaction, ItemInfo itemInfo, SimulatedSite site, LockType lockType, 
+  LockInfo(Transaction transaction, ItemInfo itemInfo, SimulatedSite site, LockType lockType, 
       int value, boolean isActive) {
     this.transaction = transaction;
     this.itemInfo = itemInfo;
