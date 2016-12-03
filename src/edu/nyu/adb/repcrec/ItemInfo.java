@@ -49,30 +49,24 @@ class ItemInfo {
   }
 
   /**
-   * clean the locklist to remove invalid locks of which transaction is aborted or site is down.
+   * Clean the lockList to remove invalid locks of which transaction is aborted or site is down.
    */
   void cleanLockList() {
-    for (int i = 0; i < lockList.size();) {
-      LockInfo lock = lockList.get(i);
-      if (!lock.isValid) {
-        lockList.remove(i);
-      } else {
-        i++;
-      }
-    }
+    cleanList(lockList);
   }
 
   /**
-   * clean wait
-   * 
-   * if a lock is in the wait list and is never acquired because the transaction aborts or the site 
-   * fails, it should be removed from the waitList
+   * Clean the waiList to remove invalid locks of which transaction is aborted or site is down.
    */
   void cleanWaitList() {
-    for (int i = 0; i < waitList.size();) {
-      LockInfo lock = waitList.get(i);
+    cleanList(waitList);
+  }
+
+  void cleanList(ArrayList<LockInfo> list) {
+    for (int i = 0; i < list.size();) {
+      LockInfo lock = list.get(i);
       if (!lock.isValid) {
-        waitList.remove(i);
+        list.remove(i);
       } else {
         i++;
       }
