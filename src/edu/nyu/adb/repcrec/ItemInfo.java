@@ -182,8 +182,7 @@ public class ItemInfo {
 
           System.out.print("Read by "
               + lock.transaction.name + ", ");
-          print(lock.itemInfo.key, lock.site
-              .siteIndex(), lock.itemInfo.value);
+          print(lock.itemInfo.key, lock.site.siteID, lock.itemInfo.value);
         }
       }
     }

@@ -5,28 +5,24 @@ import java.util.HashMap;
 import java.util.List;
 
 public class SimulatedSite {
-  final int siteNum;
+  final int siteID;
   boolean isDown;
   final TransactionManager manager;
   HashMap<String, ItemInfo> database;
   List<LockInfo> lockTable;
   //List<Lock> waitForReadyReadTable; // if necessary, store all the read transactions waiting for the variable to become ready
 
-  public SimulatedSite(int index, TransactionManager manager) {
-    this.siteNum = index;
+  public SimulatedSite(int siteID, TransactionManager manager) {
+    this.siteID = siteID;
     this.isDown = false;
     this.manager = manager;
     this.database = new HashMap<String, ItemInfo>();
     this.lockTable = new ArrayList<LockInfo>();
   }
 
-  public int siteIndex() {
-    return siteNum;
-  }
-
-  public void put(ItemInfo v) {
-    database.put(v.key, v);
-  }
+//  public void put(ItemInfo v) {
+//    database.put(v.key, v);
+//  }
 
   /**
    * fail a site
@@ -38,7 +34,7 @@ public class SimulatedSite {
    */
   public void fail() {
     isDown = true;
-    System.out.println("Site " + siteNum + " failed");
+    System.out.println("Site " + siteID + " failed");
 
     for (LockInfo lock : lockTable) {
       lock.isActive = false;
@@ -52,7 +48,7 @@ public class SimulatedSite {
    */
   public void recover() {
     isDown = false;
-    System.out.println("Site " + siteNum + " recovered");
+    System.out.println("Site " + siteID + " recovered");
     // if the variable is not replicated, mark ready_for_read as true,
     // otherwise, mark it false
     for (ItemInfo v : database.values()) {
@@ -79,7 +75,7 @@ public class SimulatedSite {
       if (database.containsKey(temp.toString())) {
         ItemInfo v = database.get(temp.toString());
         if (v.isReadyForRead) {
-          manager.print(v.key, siteNum, v.value);
+          manager.print(v.key, siteID, v.value);
         }
       }
     }
@@ -88,7 +84,7 @@ public class SimulatedSite {
   public void dump(String key) {
     if (database.containsKey(key)) {
       ItemInfo v = database.get(key);
-      manager.print(v.key, siteNum, v.value);
+      manager.print(v.key, siteID, v.value);
     }
   }
 }

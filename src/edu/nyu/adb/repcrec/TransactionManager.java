@@ -25,17 +25,15 @@ public class TransactionManager {
       sites[i] = new SimulatedSite(i + 1, this);
       
       for (int j = 1; j <= 20; j++) {
-        StringBuilder builder = new StringBuilder();
-        
-        builder.append("x");
-        builder.append(j);
+        String item = "x" + j;
+        ItemInfo itemInfo = new ItemInfo(item, 10 * j);
         
         if (j % 2 == 0) {
-          sites[i].put(new ItemInfo(builder.toString(), j * 10));
+          sites[i].database.put(item, itemInfo);
         } else if (i == 9 && (j == 9 || j == 19)) {
-          sites[i].put(new ItemInfo(builder.toString(), j * 10));
+          sites[i].database.put(item, itemInfo);
         } else if (((j + 1) % 10) == i + 1) {
-          sites[i].put(new ItemInfo(builder.toString(), j * 10));
+          sites[i].database.put(item, itemInfo);
         }
       }
     }
@@ -49,16 +47,10 @@ public class TransactionManager {
     return index % 2 == 0 ? true : false;
   }
 
-  /**
-   * instantiate a new transaction
-   */
   public void begin(String name, int time, boolean isReadOnly) {
     transactionList.put(name, new Transaction(name, time, isReadOnly, this));
   }
 
-  /**
-   * perform read operation
-   */
   public void read(String transaction, String key) {
     Transaction t = transactionList.get(transaction);
     if (t == null) {
@@ -119,7 +111,7 @@ public class TransactionManager {
               sites[i].addLock(lock);
               t.placeLock(lock);
               System.out.print("Read by " + t.name + ", ");
-              print(v.key, v.getWriteLock().site.siteIndex(), v.getWriteLock().value);
+              print(v.key, v.getWriteLock().site.siteID, v.getWriteLock().value);
             }
             else if (v.getWriteLock().transaction.initTime > t.initTime && v.canWait(t)) {
               LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
