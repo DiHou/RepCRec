@@ -9,4 +9,17 @@ class Conflict {
     this.waiting = waiting;
     this.waited = waited;
   }
+  
+  public boolean equals(Object objectToCompare) {
+    if (objectToCompare == null || objectToCompare.getClass() != getClass()) {
+      return false;
+    }
+    
+    if (this == objectToCompare) {
+      return true;
+    }
+    
+    Conflict other = (Conflict) objectToCompare;
+    return this.waiting.equals(other.waiting) && this.waited.equals(other.waited);
+  }
 }

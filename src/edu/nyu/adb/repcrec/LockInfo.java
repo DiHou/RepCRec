@@ -5,8 +5,8 @@ class LockInfo {
   ItemInfo itemInfo;
   SimulatedSite site;
   LockType lockType;
-  int value;  // the value to write for the write lock
-  boolean isActive;
+  int value;        // the value to write for the write lock
+  boolean isValid;  // When transaction is finished or site is down, the lock becomes invalid.
   
   /**
    * when a lock is created, its pointer will be stored in three objects: the
@@ -15,12 +15,12 @@ class LockInfo {
    * simply marking the lock as inactive
    */
   LockInfo(Transaction transaction, ItemInfo itemInfo, SimulatedSite site, LockType lockType, 
-      int value, boolean isActive) {
+      int value, boolean isValid) {
     this.transaction = transaction;
     this.itemInfo = itemInfo;
     this.site = site;
     this.lockType = lockType;
     this.value = value;
-    this.isActive = isActive;
+    this.isValid = isValid;
   }
 }

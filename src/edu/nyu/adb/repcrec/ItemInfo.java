@@ -23,12 +23,8 @@ class ItemInfo {
    * which have been released due to the end of a transaction or the failure of a site)
    */
   boolean isWriteLocked() {
-    cleanLock();
+    cleanLockList();
     
-    // Normally if there's a write lock, it must be the first and only lock in the
-    // lock list. But if one transaction wants to have a read lock and then a write lock on the same 
-    // variable, it might be able to get both at the same time, so the lock list might contain
-    // both write lock and read locks.
     for (LockInfo lock: lockList) {
       if (lock.lockType == LockType.WRITE) {
         return true;
@@ -38,7 +34,7 @@ class ItemInfo {
   }
   
   LockInfo getWriteLock() {
-    cleanLock();
+    cleanLockList();
     for (LockInfo lock: lockList) {
       if (lock.lockType == LockType.WRITE) {
         return lock;
@@ -48,22 +44,17 @@ class ItemInfo {
   }
 
   boolean hasLock() {
-    cleanLock();
+    cleanLockList();
     return lockList.size() != 0;
   }
 
   /**
-   * clean lock
-   * 
-   * when a transaction ends or a site fails, the lock release process will be triggered from the 
-   * corresponding objects, so a lock which has been released will be marked as inactive but still 
-   * exist in the variable lock list, such locks should be removed whenever the variable object is
-   * visited
+   * clean the locklist to remove invalid locks of which transaction is aborted or site is down.
    */
-  void cleanLock() {
+  void cleanLockList() {
     for (int i = 0; i < lockList.size();) {
       LockInfo lock = lockList.get(i);
-      if (!lock.isActive) {
+      if (!lock.isValid) {
         lockList.remove(i);
       } else {
         i++;
@@ -80,7 +71,7 @@ class ItemInfo {
   void cleanWaitList() {
     for (int i = 0; i < waitList.size();) {
       LockInfo lock = waitList.get(i);
-      if (!lock.isActive) {
+      if (!lock.isValid) {
         waitList.remove(i);
       } else {
         i++;
@@ -89,7 +80,7 @@ class ItemInfo {
   }
 
   ArrayList<LockInfo> getLockList() {
-    cleanLock();
+    cleanLockList();
     return lockList;
   }
 
@@ -110,7 +101,7 @@ class ItemInfo {
    * wait list also should be moved to the active lock list
    */
   void update() {
-    cleanLock();
+    cleanLockList();
     cleanWaitList();
     
     if (lockList.size() == 0 && waitList.size() > 0) {

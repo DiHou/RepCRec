@@ -44,7 +44,7 @@ class Transaction {
    */
   void commitWrites() {
     for (LockInfo lockInfo : locksHolding) {
-      if (lockInfo.isActive && lockInfo.lockType == LockType.WRITE) {
+      if (lockInfo.isValid && lockInfo.lockType == LockType.WRITE) {
         lockInfo.itemInfo.value = lockInfo.value;
         lockInfo.itemInfo.isReadyForRead = true;
       }
@@ -53,7 +53,7 @@ class Transaction {
 
   void releaseLocks() {
     for (LockInfo lock : locksHolding) {
-      lock.isActive = false;
+      lock.isValid = false;
       lock.itemInfo.update();
     }
   }

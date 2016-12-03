@@ -1,10 +1,8 @@
 package edu.nyu.adb.repcrec;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 
 class TransactionManager {
   HashMap<String, Transaction> transactionMapping;
@@ -244,6 +242,11 @@ class TransactionManager {
   }
   
   boolean detectDeadlock(HashSet<Conflict> conflicts) {
+    HashSet<String> visited = new HashSet<>();
+    
+//    while (!conflicts.isEmpty()) {
+//      
+//    }
     return false;
   }
   
