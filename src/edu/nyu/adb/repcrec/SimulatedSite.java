@@ -31,7 +31,7 @@ public class SimulatedSite {
 
     for (LockInfo lock : lockTable) {
       lock.isActive = false;
-      manager.abort(manager.transactionList.get(lock.transaction.name));
+      manager.abort(manager.transactionMapping.get(lock.transaction.name));
     }
     lockTable.clear();
   }

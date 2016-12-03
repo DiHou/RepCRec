@@ -3,21 +3,12 @@ package edu.nyu.adb.repcrec;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * The Manager class is use as a Transaction Manager, it has the main methods
- * needed to control transactions in the database.
- *
- */
 public class TransactionManager {
-  HashMap<String, Transaction> transactionList;
+  HashMap<String, Transaction> transactionMapping;
   SimulatedSite[] sites;
 
-  public void print(String item, int value, int siteNumber) {
-    System.out.println(item + ": " + value + " at site " + siteNumber);
-  }
-
   public void initialize() {
-    transactionList = new HashMap<String, Transaction>();
+    transactionMapping = new HashMap<String, Transaction>();
     sites = new SimulatedSite[10];
     
     for (int i = 0; i < 10; i++) {
@@ -45,11 +36,11 @@ public class TransactionManager {
   }
 
   public void begin(String name, int time, boolean isReadOnly) {
-    transactionList.put(name, new Transaction(name, time, isReadOnly, this));
+    transactionMapping.put(name, new Transaction(name, time, isReadOnly, this));
   }
 
   public void read(String transactionName, String key) {
-    Transaction transaction = transactionList.get(transactionName);
+    Transaction transaction = transactionMapping.get(transactionName);
     if (transaction == null) {
       return;
     }
@@ -66,45 +57,38 @@ public class TransactionManager {
       int i = 0;
       
       for (; i < sites.length; i++) {
-        // if not read-only type,
-        // get the first working site which contains that variable
+        // If not read-only type, get the first working site which contains that variable
         if (!sites[i].isDown && sites[i].database.containsKey(key)) {
           ItemInfo itemInfo = sites[i].database.get(key);
           
-          // need to check if the variable is ready for read,
-          // and make sure it does not have a write lock on it
+          // Need to check if the variable is ready for read, and make sure it does not have a 
+          // write lock on it
           if (itemInfo.isReadyForRead && !itemInfo.hasWriteLock()) {
-            // get a new lock and put it inside the lock list of
-            // that variable
+            // Get a new lock and put it inside the lock list of that variable
             LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
             
             itemInfo.addLock(lock);
             sites[i].addLock(lock);
-            transaction.addLock(lock);
+            transaction.locksHolding.add(lock);
             
             // print out the read value
             System.out.print("Read by " + transaction.name + ", ");
             print(itemInfo.key, itemInfo.value, i + 1);
             break;
-            
-            // if the variable has a write lock
           } else if (itemInfo.isReadyForRead) {
-            // first check if the transaction holding the lock is the same with the current transaction,
-            // if so, print out the value of that write lock even if the transaction has not committed
-            // if not, then check if the current transaction should wait for the
-            // transaction holding the write lock
-            // also check if all the transactions in the wait list
-            // of that variable are younger than the current
-            // transaction,
-            // because otherwise, there is no need to wait
-            // if decide to wait, put the lock (which represents an
-            // operation to be performed later) to the wait list
+            // First check if the transaction holding the lock is the same with the current 
+            // transaction. If so, print out the value of that write lock even if the transaction 
+            // has not committed. If not, check whether the current transaction should wait for the 
+            // transaction holding the write lock also check if all the transactions in the wait 
+            // list of that variable are younger than the current transaction. Otherwise, there is 
+            // no need to wait if decide to wait, put the lock (which represents an operation to be 
+            // performed later) to the wait list
             if (itemInfo.getWriteLock().transaction.name.equals(transaction.name)) {
               LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
               
               itemInfo.addLock(lock);
               sites[i].addLock(lock);
-              transaction.addLock(lock);
+              transaction.locksHolding.add(lock);
               System.out.print("Read by " + transaction.name + ", ");
               print(itemInfo.key, itemInfo.getWriteLock().value, itemInfo.getWriteLock().site.siteID);
             }
@@ -113,7 +97,7 @@ public class TransactionManager {
               
               itemInfo.waitList.add(lock);
               sites[i].addLock(lock);
-              transaction.addLock(lock);
+              transaction.locksHolding.add(lock);
             } else {
               abort(transaction);
             }
@@ -130,7 +114,7 @@ public class TransactionManager {
               LockInfo lock = new LockInfo(transaction, sites[pos].database.get(key), sites[pos], LockType.READ, 
                   0, true); 
               sites[pos].addLock(lock);
-              transaction.addLock(lock);
+              transaction.locksHolding.add(lock);
               sites[pos].database.get(key).addLock(lock);
               break;
             } 
@@ -143,10 +127,10 @@ public class TransactionManager {
     }
   }
 
-  public void write(String transaction, String key, int value) {
-    Transaction t = transactionList.get(transaction);
+  public void write(String transactionName, String key, int value) {
+    Transaction transaction = transactionMapping.get(transactionName);
     
-    if (t == null) {
+    if (transaction == null) {
       return;
     }
     
@@ -160,37 +144,37 @@ public class TransactionManager {
         ItemInfo itemInfo = sites[i].database.get(key);
         if (!itemInfo.hasLock()) {
           // if it does not have lock, get a new lock
-          LockInfo lock = new LockInfo(t, itemInfo, sites[i], LockType.WRITE, value, true);
+          LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           itemInfo.addLock(lock);
           sites[i].addLock(lock);
-          t.addLock(lock);
+          transaction.locksHolding.add(lock);
           shouldAbort = false;
         } else {
           List<LockInfo> lockList = itemInfo.getLockList();
           // if it already has a lock, first check if it is itself holding the lock
           int pos = 0;
           for (; pos < lockList.size(); pos++) {
-            if (!lockList.get(pos).transaction.name.equals(t.name)) {
+            if (!lockList.get(pos).transaction.name.equals(transaction.name)) {
               break;
             }
           }
           // if it's not itself, decide if it should wait
           if (pos != lockList.size()) {
             for (LockInfo lock : lockList) {
-              if (lock.transaction.initTime < t.initTime) {
-                abort(t);
+              if (lock.transaction.initTime < transaction.initTime) {
+                abort(transaction);
                 break;
               }
             }
-            if (!itemInfo.canWait(t)) {
-              abort(t);
+            if (!itemInfo.canWait(transaction)) {
+              abort(transaction);
               break;
             }
           }
           
           // if it's only itself or it decides to wait,
           // get a new lock and put it in the lock list or wait list
-          LockInfo lock = new LockInfo(t, itemInfo, sites[i], LockType.WRITE, value, true);
+          LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           if (pos == lockList.size()) {
               itemInfo.addLock(lock);
           }
@@ -198,7 +182,7 @@ public class TransactionManager {
             itemInfo.waitList.add(lock); 
           }
           sites[i].addLock(lock);
-          t.addLock(lock);
+          transaction.locksHolding.add(lock);
           shouldAbort = false;
         }
       }
@@ -208,17 +192,17 @@ public class TransactionManager {
       if (!isReplicated(key)) {
         for (int pos = 0; pos < sites.length; pos++) {
           if (sites[pos].database.containsKey(key) && sites[pos].isDown) {
-            LockInfo lock = new LockInfo(t, sites[pos].database.get(key), sites[pos], LockType.WRITE, 
+            LockInfo lock = new LockInfo(transaction, sites[pos].database.get(key), sites[pos], LockType.WRITE, 
                 value, true); 
             sites[pos].addLock(lock);
-            t.addLock(lock);
+            transaction.locksHolding.add(lock);
             sites[pos].database.get(key).addLock(lock);
             break;
           } 
         }
       }
       else {
-        abort(t);
+        abort(transaction);
       }
     }
   }
@@ -228,24 +212,19 @@ public class TransactionManager {
   }
 
   public void end(Transaction transaction, boolean toCommit) {
-    if (transaction == null || !transactionList.containsKey(transaction.name)) {
+    if (transaction == null || !transactionMapping.containsKey(transaction.name)) {
       return;
     }
     
-    if (toCommit) {
-      System.out.println(transaction.name + " committed");
-    } else {
-      System.out.println(transaction.name + " aborted");
-    }
+    System.out.println(transaction.name + (toCommit ? " committed" : " aborted"));
     
-    // difference between commit and abort is that if all the locks should
-    // be 'realized', or simply discarded
+    // Commit writes if the transaction is to commit.
     if (toCommit) {
       transaction.commitWrites();
     }
     
     transaction.releaseLocks();
-    transactionList.remove(transaction.name);
+    transactionMapping.remove(transaction.name);
   }
 
   public void fail(int siteNumber) {
@@ -273,5 +252,10 @@ public class TransactionManager {
     for (int i = 0; i < sites.length; i++) {
       sites[i].dump(key);
     }
+  }
+  
+
+  public void print(String item, int value, int siteNumber) {
+    System.out.println(item + ": " + value + " at site " + siteNumber);
   }
 }

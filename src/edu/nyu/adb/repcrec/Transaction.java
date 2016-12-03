@@ -2,14 +2,13 @@ package edu.nyu.adb.repcrec;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class Transaction {
   final String name;
   final int initTime;
   final boolean isReadOnly;
   TransactionManager manager;
-  List<LockInfo> locksHolding;
+  ArrayList<LockInfo> locksHolding;
   HashMap<String, int[]> snapshot;
 
   public Transaction(String name, int initTime, boolean readOnly, TransactionManager manager) {
@@ -35,10 +34,6 @@ public class Transaction {
     }
   }
   
-  public void addLock(LockInfo lock) {
-    locksHolding.add(lock);
-  }
-
   /**
    * actually commit write operations when a transaction commits
    */

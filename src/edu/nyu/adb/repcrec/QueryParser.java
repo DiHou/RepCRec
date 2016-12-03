@@ -49,7 +49,7 @@ class QueryParser {
       String[] splitted = query.substring(2, query.indexOf(")")).split(",");
       manager.write(splitted[0], splitted[1], Integer.parseInt(splitted[2]));
     } else if (query.startsWith("end(")) {
-      manager.end(manager.transactionList.get(query.substring(4, query.length() - 1)), true);
+      manager.end(manager.transactionMapping.get(query.substring(4, query.length() - 1)), true);
     } else if (query.startsWith("fail(")) {
       manager.fail(Integer.parseInt(query.substring(5, query.length() - 1)));
     } else if (query.startsWith("recover(")) {
