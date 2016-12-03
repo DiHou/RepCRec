@@ -31,11 +31,11 @@ public class TransactionManager {
         builder.append(j);
         
         if (j % 2 == 0) {
-          sites[i].add(new ItemInfo(builder.toString(), j * 10));
+          sites[i].put(new ItemInfo(builder.toString(), j * 10));
         } else if (i == 9 && (j == 9 || j == 19)) {
-          sites[i].add(new ItemInfo(builder.toString(), j * 10));
+          sites[i].put(new ItemInfo(builder.toString(), j * 10));
         } else if (((j + 1) % 10) == i + 1) {
-          sites[i].add(new ItemInfo(builder.toString(), j * 10));
+          sites[i].put(new ItemInfo(builder.toString(), j * 10));
         }
       }
     }
@@ -81,8 +81,8 @@ public class TransactionManager {
       for (; i < sites.length; i++) {
         // if not read-only type,
         // get the first working site which contains that variable
-        if (!sites[i].isDown && sites[i].variableList.containsKey(key)) {
-          ItemInfo v = sites[i].variableList.get(key);
+        if (!sites[i].isDown && sites[i].database.containsKey(key)) {
+          ItemInfo v = sites[i].database.get(key);
           
           // need to check if the variable is ready for read,
           // and make sure it does not have a write lock on it
@@ -92,7 +92,7 @@ public class TransactionManager {
             LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
             
             v.placeLock(lock);
-            sites[i].placeLock(lock);
+            sites[i].addLock(lock);
             t.placeLock(lock);
             
             // print out the read value
@@ -116,7 +116,7 @@ public class TransactionManager {
               LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
               
               v.placeLock(lock);
-              sites[i].placeLock(lock);
+              sites[i].addLock(lock);
               t.placeLock(lock);
               System.out.print("Read by " + t.name + ", ");
               print(v.key, v.getWriteLock().site.siteIndex(), v.getWriteLock().value);
@@ -125,7 +125,7 @@ public class TransactionManager {
               LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
               
               v.waitList.add(lock);
-              sites[i].placeLock(lock);
+              sites[i].addLock(lock);
               t.placeLock(lock);
             } else {
               abort(t);
@@ -139,12 +139,12 @@ public class TransactionManager {
       if (i == sites.length) {
         if (!isReplicated(key)) {
           for (int pos = 0; pos < sites.length; pos++) {
-            if (sites[pos].variableList.containsKey(key) && sites[pos].isDown) {
-              LockInfo lock = new LockInfo(t, sites[pos].variableList.get(key), sites[pos], LockType.READ, 
+            if (sites[pos].database.containsKey(key) && sites[pos].isDown) {
+              LockInfo lock = new LockInfo(t, sites[pos].database.get(key), sites[pos], LockType.READ, 
                   0, true); 
-              sites[pos].placeLock(lock);
+              sites[pos].addLock(lock);
               t.placeLock(lock);
-              sites[pos].variableList.get(key).placeLock(lock);
+              sites[pos].database.get(key).placeLock(lock);
               break;
             } 
           }
@@ -169,13 +169,13 @@ public class TransactionManager {
     for (; i < sites.length; i++) {
       // need to check if the variable is ready for read,
       // and make sure it does not have any lock on it (except for the lock held by itself)
-      if (!sites[i].isDown && sites[i].variableList.containsKey(key)) {
-        ItemInfo v = sites[i].variableList.get(key);
+      if (!sites[i].isDown && sites[i].database.containsKey(key)) {
+        ItemInfo v = sites[i].database.get(key);
         if (!v.hasLock()) {
           // if it does not have lock, get a new lock
           LockInfo lock = new LockInfo(t, v, sites[i], LockType.WRITE, value, true);
           v.placeLock(lock);
-          sites[i].placeLock(lock);
+          sites[i].addLock(lock);
           t.placeLock(lock);
           shouldAbort = false;
         } else {
@@ -210,7 +210,7 @@ public class TransactionManager {
           else {
             v.waitList.add(lock); 
           }
-          sites[i].placeLock(lock);
+          sites[i].addLock(lock);
           t.placeLock(lock);
           shouldAbort = false;
         }
@@ -220,12 +220,12 @@ public class TransactionManager {
     if (shouldAbort) {
       if (!isReplicated(key)) {
         for (int pos = 0; pos < sites.length; pos++) {
-          if (sites[pos].variableList.containsKey(key) && sites[pos].isDown) {
-            LockInfo lock = new LockInfo(t, sites[pos].variableList.get(key), sites[pos], LockType.WRITE, 
+          if (sites[pos].database.containsKey(key) && sites[pos].isDown) {
+            LockInfo lock = new LockInfo(t, sites[pos].database.get(key), sites[pos], LockType.WRITE, 
                 value, true); 
-            sites[pos].placeLock(lock);
+            sites[pos].addLock(lock);
             t.placeLock(lock);
-            sites[pos].variableList.get(key).placeLock(lock);
+            sites[pos].database.get(key).placeLock(lock);
             break;
           } 
         }

@@ -4,49 +4,28 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * The Site class contains all the variables and functions needed for a site in
- * a distributed database, including the locks. Each database have 10 sites.
- * 
- *
- */
 public class SimulatedSite {
-  int index;
-  TransactionManager tm;
+  final int siteNum;
   boolean isDown;
-  HashMap<String, ItemInfo> variableList; // stores the variables on the site
-  List<LockInfo> lockTable; // stores all the locks on the variables of this site
+  final TransactionManager manager;
+  HashMap<String, ItemInfo> database;
+  List<LockInfo> lockTable;
   //List<Lock> waitForReadyReadTable; // if necessary, store all the read transactions waiting for the variable to become ready
 
-  /**
-   * site constructor
-   * 
-   * @param index
-   */
-  public SimulatedSite(int index, TransactionManager tm) {
-    this.index = index;
-    this.tm = tm;
-    isDown = false;
-    variableList = new HashMap<String, ItemInfo>();
-    lockTable = new ArrayList<LockInfo>();
+  public SimulatedSite(int index, TransactionManager manager) {
+    this.siteNum = index;
+    this.isDown = false;
+    this.manager = manager;
+    this.database = new HashMap<String, ItemInfo>();
+    this.lockTable = new ArrayList<LockInfo>();
   }
 
-  /**
-   * get the site index
-   * 
-   * @return site index
-   */
   public int siteIndex() {
-    return index;
+    return siteNum;
   }
 
-  /**
-   * add a variable into variableList
-   * 
-   * @param variable
-   */
-  public void add(ItemInfo v) {
-    variableList.put(v.key, v);
+  public void put(ItemInfo v) {
+    database.put(v.key, v);
   }
 
   /**
@@ -59,11 +38,11 @@ public class SimulatedSite {
    */
   public void fail() {
     isDown = true;
-    System.out.println("Site " + index + " failed");
+    System.out.println("Site " + siteNum + " failed");
 
     for (LockInfo lock : lockTable) {
       lock.isActive = false;
-      tm.abort(tm.transactionList.get(lock.transaction.name));
+      manager.abort(manager.transactionList.get(lock.transaction.name));
     }
     lockTable.clear();
   }
@@ -73,25 +52,19 @@ public class SimulatedSite {
    */
   public void recover() {
     isDown = false;
-    System.out.println("Site " + index + " recovered");
+    System.out.println("Site " + siteNum + " recovered");
     // if the variable is not replicated, mark ready_for_read as true,
     // otherwise, mark it false
-    for (ItemInfo v : variableList.values()) {
-      if (!tm.isReplicated(v.key)) {
+    for (ItemInfo v : database.values()) {
+      if (!manager.isReplicated(v.key)) {
         v.isReadyForRead = true;
       } else {
         v.isReadyForRead = false;
       }
     }
-    //if (!lockTable.isEmpty())
   }
 
-  /**
-   * add a lock into lockTable
-   * 
-   * @param lock
-   */
-  public void placeLock(LockInfo lock) {
+  public void addLock(LockInfo lock) {
     lockTable.add(lock);
   }
 
@@ -103,19 +76,19 @@ public class SimulatedSite {
       StringBuilder temp = new StringBuilder();
       temp.append("x");
       temp.append(i);
-      if (variableList.containsKey(temp.toString())) {
-        ItemInfo v = variableList.get(temp.toString());
+      if (database.containsKey(temp.toString())) {
+        ItemInfo v = database.get(temp.toString());
         if (v.isReadyForRead) {
-          tm.print(v.key, index, v.value);
+          manager.print(v.key, siteNum, v.value);
         }
       }
     }
   }
 
   public void dump(String key) {
-    if (variableList.containsKey(key)) {
-      ItemInfo v = variableList.get(key);
-      tm.print(v.key, index, v.value);
+    if (database.containsKey(key)) {
+      ItemInfo v = database.get(key);
+      manager.print(v.key, siteNum, v.value);
     }
   }
 }

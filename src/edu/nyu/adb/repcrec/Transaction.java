@@ -44,9 +44,9 @@ public class Transaction {
         SimulatedSite[] sites = tm.sites;
         
         for (int j = 0; j < sites.length; j++) {
-          if (sites[j].variableList.containsKey(vName)) {
+          if (sites[j].database.containsKey(vName)) {
             readOnly.put(vName, new Integer[] {
-                sites[j].variableList.get(vName).value, j + 1 });
+                sites[j].database.get(vName).value, j + 1 });
             //System.out.printf("%d, %s\n",sites[j].getVariable(vName).getValue(), vName);
             
             break;
@@ -93,10 +93,10 @@ public class Transaction {
     for (LockInfo lock : lockTable) {
       if (lock.isActive && lock.lockType == LockType.WRITE) {
         
-        lock.variable.value = lock.value;
+        lock.itemInfo.value = lock.value;
         
         //mark all the variables as ready_for_read
-        lock.variable.isReadyForRead = true;
+        lock.itemInfo.isReadyForRead = true;
       }
     }
   }
@@ -110,7 +110,7 @@ public class Transaction {
   public void nullifyLocks() {
     for (LockInfo lock : lockTable) {
       lock.isActive = false;
-      lock.variable.update();
+      lock.itemInfo.update();
     }
   }
 }
