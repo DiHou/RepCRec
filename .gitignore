@@ -1,2 +1,6 @@
-/bin/
-*class
+// .class files
+bin/
+*.class
+
+res/
+run.sh
