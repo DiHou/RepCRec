@@ -73,7 +73,7 @@ class TransactionManager {
           print(itemInfo.key, itemInfo.value, i + 1);
           return;
         } else if (itemInfo.isReadyForRead) {  // item is write locked
-          LockInfo writeLock = itemInfo.getWriteLock();
+          LockInfo writeLock = itemInfo.getWriteLockInfo();
           if (writeLock.transaction.name.equals(transaction.name)) {  // locked by self
             LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
             
@@ -82,7 +82,7 @@ class TransactionManager {
             sites[i].addLock(lock);
             
             System.out.print("Read by " + transaction.name + ", ");
-            print(itemInfo.key, itemInfo.getWriteLock().value, itemInfo.getWriteLock().site.siteID);
+            print(itemInfo.key, itemInfo.getWriteLockInfo().value, itemInfo.getWriteLockInfo().site.siteID);
           } else {
             LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
             
@@ -133,7 +133,7 @@ class TransactionManager {
         continue;
       } else if (sites[i].database.containsKey(key)) {
         ItemInfo itemInfo = sites[i].database.get(key);
-        if (!itemInfo.hasLock()) {    // if the item does not have any lock
+        if (!itemInfo.isReadOrWriteLocked()) {    // if the item does not have any lock
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           
           itemInfo.lockList.add(lock);

@@ -17,11 +17,6 @@ class ItemInfo {
     this.waitList = new ArrayList<LockInfo>();
   }
   
-  /**
-   * when a transaction wants to read, it needs to examine if there is write lock on this variable 
-   * before examination, make sure all the locks in the lock list are active (remove the locks 
-   * which have been released due to the end of a transaction or the failure of a site)
-   */
   boolean isWriteLocked() {
     cleanLockList();
     
@@ -33,36 +28,32 @@ class ItemInfo {
     return false;
   }
   
-  LockInfo getWriteLock() {
+  LockInfo getWriteLockInfo() {
     cleanLockList();
-    for (LockInfo lock: lockList) {
-      if (lock.lockType == LockType.WRITE) {
-        return lock;
+    for (LockInfo lockInfo: lockList) {
+      if (lockInfo.lockType == LockType.WRITE) {
+        return lockInfo;
       }
     } 
     return null;
   }
 
-  boolean hasLock() {
+  boolean isReadOrWriteLocked() {
     cleanLockList();
     return lockList.size() != 0;
   }
 
-  /**
-   * Clean the lockList to remove invalid locks of which transaction is aborted or site is down.
-   */
+  // Remove invalid locks of which transaction is aborted or site is down.
   void cleanLockList() {
     cleanList(lockList);
   }
 
-  /**
-   * Clean the waiList to remove invalid locks of which transaction is aborted or site is down.
-   */
+  // Remove invalid locks of which transaction is aborted or site is down.
   void cleanWaitList() {
     cleanList(waitList);
   }
 
-  void cleanList(ArrayList<LockInfo> list) {
+  private void cleanList(ArrayList<LockInfo> list) {
     for (int i = 0; i < list.size();) {
       LockInfo lock = list.get(i);
       if (!lock.isValid) {
