@@ -48,21 +48,19 @@ public class TransactionManager {
     transactionList.put(name, new Transaction(name, time, isReadOnly, this));
   }
 
-  public void read(String transaction, String key) {
-    Transaction t = transactionList.get(transaction);
-    if (t == null) {
+  public void read(String transactionName, String key) {
+    Transaction transaction = transactionList.get(transactionName);
+    if (transaction == null) {
       return;
     }
     
-    // if the transaction is read-only type,
-    // simply retrieve and return the 'cache' it stores
-    if (t.isReadOnly) {
-      if (t.containsReadOnly(key)) {
-        System.out.print("Read by " + t.name + ", ");
-        Integer[] array = t.readOnly.get(key);
-        print(key, array[0], array[1]);
+    if (transaction.isReadOnly) {
+      if (transaction.snapshot.containsKey(key)) {
+        System.out.print("Read by " + transaction.name + ", ");
+        int[] valueInfo = transaction.snapshot.get(key);
+        print(key, valueInfo[0], valueInfo[1]);
       } else {
-        abort(t);
+        abort(transaction);
       }
     } else {
       int i = 0;
@@ -78,14 +76,14 @@ public class TransactionManager {
           if (itemInfo.isReadyForRead && !itemInfo.hasWriteLock()) {
             // get a new lock and put it inside the lock list of
             // that variable
-            LockInfo lock = new LockInfo(t, itemInfo, sites[i], LockType.READ, 0, true);
+            LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
             
             itemInfo.addLock(lock);
             sites[i].addLock(lock);
-            t.addLock(lock);
+            transaction.addLock(lock);
             
             // print out the read value
-            System.out.print("Read by " + t.name + ", ");
+            System.out.print("Read by " + transaction.name + ", ");
             print(itemInfo.key, itemInfo.value, i + 1);
             break;
             
@@ -101,23 +99,23 @@ public class TransactionManager {
             // because otherwise, there is no need to wait
             // if decide to wait, put the lock (which represents an
             // operation to be performed later) to the wait list
-            if (itemInfo.getWriteLock().transaction.name.equals(t.name)) {
-              LockInfo lock = new LockInfo(t, itemInfo, sites[i], LockType.READ, 0, true);
+            if (itemInfo.getWriteLock().transaction.name.equals(transaction.name)) {
+              LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
               
               itemInfo.addLock(lock);
               sites[i].addLock(lock);
-              t.addLock(lock);
-              System.out.print("Read by " + t.name + ", ");
+              transaction.addLock(lock);
+              System.out.print("Read by " + transaction.name + ", ");
               print(itemInfo.key, itemInfo.getWriteLock().value, itemInfo.getWriteLock().site.siteID);
             }
-            else if (itemInfo.getWriteLock().transaction.initTime > t.initTime && itemInfo.canWait(t)) {
-              LockInfo lock = new LockInfo(t, itemInfo, sites[i], LockType.READ, 0, true);
+            else if (itemInfo.getWriteLock().transaction.initTime > transaction.initTime && itemInfo.canWait(transaction)) {
+              LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
               
               itemInfo.waitList.add(lock);
               sites[i].addLock(lock);
-              t.addLock(lock);
+              transaction.addLock(lock);
             } else {
-              abort(t);
+              abort(transaction);
             }
             break;
           }
@@ -129,17 +127,17 @@ public class TransactionManager {
         if (!isReplicated(key)) {
           for (int pos = 0; pos < sites.length; pos++) {
             if (sites[pos].database.containsKey(key) && sites[pos].isDown) {
-              LockInfo lock = new LockInfo(t, sites[pos].database.get(key), sites[pos], LockType.READ, 
+              LockInfo lock = new LockInfo(transaction, sites[pos].database.get(key), sites[pos], LockType.READ, 
                   0, true); 
               sites[pos].addLock(lock);
-              t.addLock(lock);
+              transaction.addLock(lock);
               sites[pos].database.get(key).addLock(lock);
               break;
             } 
           }
         }
         else {
-          abort(t);
+          abort(transaction);
         }
       }
     }
