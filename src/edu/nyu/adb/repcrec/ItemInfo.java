@@ -172,13 +172,13 @@ public class ItemInfo {
           
           System.out.print("Read by "
               + lock.transaction.name + ", ");
-          print(lock.itemInfo.key, lock.site.siteID, lock.itemInfo.value);
+          print(lock.itemInfo.key, lock.itemInfo.value, lock.site.siteID);
         }
       }
     }
   }
   
-  public void print(String vName, int siteNumber, int value) {
-    System.out.println(vName + ": " + value + " at site " + siteNumber);
+  public void print(String key, int value, int siteNumber) {
+    System.out.println(key + ": " + value + " at site " + siteNumber);
   }
 }

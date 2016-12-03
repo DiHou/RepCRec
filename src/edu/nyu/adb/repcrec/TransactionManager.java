@@ -71,26 +71,26 @@ public class TransactionManager {
         // if not read-only type,
         // get the first working site which contains that variable
         if (!sites[i].isDown && sites[i].database.containsKey(key)) {
-          ItemInfo v = sites[i].database.get(key);
+          ItemInfo itemInfo = sites[i].database.get(key);
           
           // need to check if the variable is ready for read,
           // and make sure it does not have a write lock on it
-          if (v.isReadyForRead && !v.hasWriteLock()) {
+          if (itemInfo.isReadyForRead && !itemInfo.hasWriteLock()) {
             // get a new lock and put it inside the lock list of
             // that variable
-            LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
+            LockInfo lock = new LockInfo(t, itemInfo, sites[i], LockType.READ, 0, true);
             
-            v.addLock(lock);
+            itemInfo.addLock(lock);
             sites[i].addLock(lock);
             t.addLock(lock);
             
             // print out the read value
             System.out.print("Read by " + t.name + ", ");
-            print(v.key, v.value, i + 1);
+            print(itemInfo.key, itemInfo.value, i + 1);
             break;
             
             // if the variable has a write lock
-          } else if (v.isReadyForRead) {
+          } else if (itemInfo.isReadyForRead) {
             // first check if the transaction holding the lock is the same with the current transaction,
             // if so, print out the value of that write lock even if the transaction has not committed
             // if not, then check if the current transaction should wait for the
@@ -101,19 +101,19 @@ public class TransactionManager {
             // because otherwise, there is no need to wait
             // if decide to wait, put the lock (which represents an
             // operation to be performed later) to the wait list
-            if (v.getWriteLock().transaction.name.equals(t.name)) {
-              LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
+            if (itemInfo.getWriteLock().transaction.name.equals(t.name)) {
+              LockInfo lock = new LockInfo(t, itemInfo, sites[i], LockType.READ, 0, true);
               
-              v.addLock(lock);
+              itemInfo.addLock(lock);
               sites[i].addLock(lock);
               t.addLock(lock);
               System.out.print("Read by " + t.name + ", ");
-              print(v.key, v.getWriteLock().value, v.getWriteLock().site.siteID);
+              print(itemInfo.key, itemInfo.getWriteLock().value, itemInfo.getWriteLock().site.siteID);
             }
-            else if (v.getWriteLock().transaction.initTime > t.initTime && v.canWait(t)) {
-              LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
+            else if (itemInfo.getWriteLock().transaction.initTime > t.initTime && itemInfo.canWait(t)) {
+              LockInfo lock = new LockInfo(t, itemInfo, sites[i], LockType.READ, 0, true);
               
-              v.waitList.add(lock);
+              itemInfo.waitList.add(lock);
               sites[i].addLock(lock);
               t.addLock(lock);
             } else {
@@ -159,16 +159,16 @@ public class TransactionManager {
       // need to check if the variable is ready for read,
       // and make sure it does not have any lock on it (except for the lock held by itself)
       if (!sites[i].isDown && sites[i].database.containsKey(key)) {
-        ItemInfo v = sites[i].database.get(key);
-        if (!v.hasLock()) {
+        ItemInfo itemInfo = sites[i].database.get(key);
+        if (!itemInfo.hasLock()) {
           // if it does not have lock, get a new lock
-          LockInfo lock = new LockInfo(t, v, sites[i], LockType.WRITE, value, true);
-          v.addLock(lock);
+          LockInfo lock = new LockInfo(t, itemInfo, sites[i], LockType.WRITE, value, true);
+          itemInfo.addLock(lock);
           sites[i].addLock(lock);
           t.addLock(lock);
           shouldAbort = false;
         } else {
-          List<LockInfo> lockList = v.getLockList();
+          List<LockInfo> lockList = itemInfo.getLockList();
           // if it already has a lock, first check if it is itself holding the lock
           int pos = 0;
           for (; pos < lockList.size(); pos++) {
@@ -184,7 +184,7 @@ public class TransactionManager {
                 break;
               }
             }
-            if (!v.canWait(t)) {
+            if (!itemInfo.canWait(t)) {
               abort(t);
               break;
             }
@@ -192,12 +192,12 @@ public class TransactionManager {
           
           // if it's only itself or it decides to wait,
           // get a new lock and put it in the lock list or wait list
-          LockInfo lock = new LockInfo(t, v, sites[i], LockType.WRITE, value, true);
+          LockInfo lock = new LockInfo(t, itemInfo, sites[i], LockType.WRITE, value, true);
           if (pos == lockList.size()) {
-              v.addLock(lock);
+              itemInfo.addLock(lock);
           }
           else {
-            v.waitList.add(lock); 
+            itemInfo.waitList.add(lock); 
           }
           sites[i].addLock(lock);
           t.addLock(lock);
