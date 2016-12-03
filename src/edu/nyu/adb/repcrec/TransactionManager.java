@@ -1,6 +1,7 @@
 package edu.nyu.adb.repcrec;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 class TransactionManager {
@@ -218,9 +219,24 @@ class TransactionManager {
   }
 
   void deadLockCheckAndHandle() {
-    
+    HashSet<Conflict> conflicts = constructConflicts();
+    boolean deadlock = detectDeadlock(conflicts);
+    if (deadlock) {
+      
+    }
   }
   
+  HashSet<Conflict> constructConflicts() {
+    HashSet<Conflict> result = new HashSet<>();
+    
+    
+    
+    return result;
+  }
+  
+  boolean detectDeadlock(HashSet<Conflict> conflicts) {
+    return false;
+  }
   
   void fail(int siteNumber) {
     sites[siteNumber - 1].fail();
