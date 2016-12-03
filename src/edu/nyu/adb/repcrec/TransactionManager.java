@@ -68,18 +68,17 @@ class TransactionManager {
             sites[i].addLock(lock);
             transaction.locksHolding.add(lock);
             
-            // print out the read value
             System.out.print("Read by " + transaction.name + ", ");
             print(itemInfo.key, itemInfo.value, i + 1);
             break;
-          } else if (itemInfo.isReadyForRead) {
+          } else if (itemInfo.isReadyForRead) {  // item is write locked
             // First check if the transaction holding the lock is the same with the current 
             // transaction. If so, print out the value of that write lock even if the transaction 
             // has not committed. If not, check whether the current transaction should wait for the 
             // transaction holding the write lock also check if all the transactions in the wait 
             // list of that variable are younger than the current transaction. Otherwise, there is 
-            // no need to wait if decide to wait, put the lock (which represents an operation to be 
-            // performed later) to the wait list
+            // no need to wait if decide not to wait, put the lock (which represents an operation 
+            // to be performed later) to the wait list
             if (itemInfo.getWriteLock().transaction.name.equals(transaction.name)) {
               LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
               
@@ -88,8 +87,8 @@ class TransactionManager {
               transaction.locksHolding.add(lock);
               System.out.print("Read by " + transaction.name + ", ");
               print(itemInfo.key, itemInfo.getWriteLock().value, itemInfo.getWriteLock().site.siteID);
-            }
-            else if (itemInfo.getWriteLock().transaction.initTime > transaction.initTime && itemInfo.canWait(transaction)) {
+            } else if (itemInfo.getWriteLock().transaction.initTime > transaction.initTime 
+                && itemInfo.canWait(transaction)) {
               LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
               
               itemInfo.waitList.add(lock);
