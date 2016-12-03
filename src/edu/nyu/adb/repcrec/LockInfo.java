@@ -10,10 +10,10 @@ package edu.nyu.adb.repcrec;
 class LockInfo {
   Transaction transaction;
   ItemInfo variable;
-  String type; // either "Read" or "Write"
+  LockType lockType; // either "Read" or "Write"
   SimulatedSite site;
   boolean isActive;
-  int value; // the value to be written if it's a write lock
+  int value;  // this is the new value to be written for the write lock
 
   /**
    * when a lock is created, its pointer will be stored in three objects: the
@@ -22,12 +22,12 @@ class LockInfo {
    * simply marking the lock as inactive
    */
   public LockInfo(Transaction transaction, ItemInfo variable, SimulatedSite site,
-      String type, int value, boolean isActive) {
+      LockType lockType, int value, boolean isActive) {
     this.transaction = transaction;
     this.variable = variable;
     this.site = site;
     this.value = value;
     this.isActive = isActive;
-    this.type = type;
+    this.lockType = lockType;
   }
 }

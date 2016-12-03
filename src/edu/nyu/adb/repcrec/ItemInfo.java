@@ -46,7 +46,7 @@ public class ItemInfo {
     // variable, it might be able to get both at the same time, so the lock list might contain
     // both write lock and read locks.
     for (LockInfo lock: lockList) {
-      if (lock.type.equals("Write")) {
+      if (lock.lockType == LockType.WRITE) {
         return true;
       }
     } 
@@ -61,7 +61,7 @@ public class ItemInfo {
   public LockInfo getWriteLock() {
     cleanLock();
     for (LockInfo lock: lockList) {
-      if (lock.type.equals("Write")) {
+      if (lock.lockType == LockType.WRITE) {
         return lock;
       }
     } 
@@ -165,7 +165,7 @@ public class ItemInfo {
 
     if (lockList.size() == 0 && waitList.size() > 0) {
 
-      if (waitList.get(0).type.equals("Write")) {
+      if (waitList.get(0).lockType == LockType.WRITE) {
         Transaction t = waitList.get(0).transaction;
         lockList.add(waitList.get(0));
         waitList.remove(0);
@@ -175,7 +175,7 @@ public class ItemInfo {
         }
       } else {
         while (waitList.size() > 0
-            && waitList.get(0).type.equals("Read")) {
+            && waitList.get(0).lockType == LockType.READ) {
           LockInfo lock = waitList.get(0);
           lockList.add(lock);
           waitList.remove(0);

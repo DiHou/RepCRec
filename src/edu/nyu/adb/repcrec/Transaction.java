@@ -91,7 +91,7 @@ public class Transaction {
   public void realizeLocks() {
     
     for (LockInfo lock : lockTable) {
-      if (lock.isActive && lock.type.equals("Write")) {
+      if (lock.isActive && lock.lockType == LockType.WRITE) {
         
         lock.variable.value = lock.value;
         

@@ -89,7 +89,7 @@ public class TransactionManager {
           if (v.isReadyForRead && !v.hasWriteLock()) {
             // get a new lock and put it inside the lock list of
             // that variable
-            LockInfo lock = new LockInfo(t, v, sites[i], "Read", 0, true);
+            LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
             
             v.placeLock(lock);
             sites[i].placeLock(lock);
@@ -113,7 +113,7 @@ public class TransactionManager {
             // if decide to wait, put the lock (which represents an
             // operation to be performed later) to the wait list
             if (v.getWriteLock().transaction.name.equals(t.name)) {
-              LockInfo lock = new LockInfo(t, v, sites[i], "Read", 0, true);
+              LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
               
               v.placeLock(lock);
               sites[i].placeLock(lock);
@@ -122,7 +122,7 @@ public class TransactionManager {
               print(v.key, v.getWriteLock().site.siteIndex(), v.getWriteLock().value);
             }
             else if (v.getWriteLock().transaction.initTime > t.initTime && v.canWait(t)) {
-              LockInfo lock = new LockInfo(t, v, sites[i], "Read", 0, true);
+              LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
               
               v.waitList.add(lock);
               sites[i].placeLock(lock);
@@ -140,7 +140,7 @@ public class TransactionManager {
         if (!isReplicated(key)) {
           for (int pos = 0; pos < sites.length; pos++) {
             if (sites[pos].variableList.containsKey(key) && sites[pos].isDown) {
-              LockInfo lock = new LockInfo(t, sites[pos].variableList.get(key), sites[pos], "Read", 
+              LockInfo lock = new LockInfo(t, sites[pos].variableList.get(key), sites[pos], LockType.READ, 
                   0, true); 
               sites[pos].placeLock(lock);
               t.placeLock(lock);
@@ -173,7 +173,7 @@ public class TransactionManager {
         ItemInfo v = sites[i].variableList.get(key);
         if (!v.hasLock()) {
           // if it does not have lock, get a new lock
-          LockInfo lock = new LockInfo(t, v, sites[i], "Write", value, true);
+          LockInfo lock = new LockInfo(t, v, sites[i], LockType.WRITE, value, true);
           v.placeLock(lock);
           sites[i].placeLock(lock);
           t.placeLock(lock);
@@ -203,7 +203,7 @@ public class TransactionManager {
           
           // if it's only itself or it decides to wait,
           // get a new lock and put it in the lock list or wait list
-          LockInfo lock = new LockInfo(t, v, sites[i], "Write", value, true);
+          LockInfo lock = new LockInfo(t, v, sites[i], LockType.WRITE, value, true);
           if (pos == lockList.size()) {
               v.placeLock(lock);
           }
@@ -221,7 +221,7 @@ public class TransactionManager {
       if (!isReplicated(key)) {
         for (int pos = 0; pos < sites.length; pos++) {
           if (sites[pos].variableList.containsKey(key) && sites[pos].isDown) {
-            LockInfo lock = new LockInfo(t, sites[pos].variableList.get(key), sites[pos], "Write", 
+            LockInfo lock = new LockInfo(t, sites[pos].variableList.get(key), sites[pos], LockType.WRITE, 
                 value, true); 
             sites[pos].placeLock(lock);
             t.placeLock(lock);

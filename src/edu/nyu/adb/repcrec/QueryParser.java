@@ -2,139 +2,64 @@ package edu.nyu.adb.repcrec;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 
 class QueryParser {
   int time = 0;
-  TransactionManager tm;
+  final TransactionManager manager;
   
-  QueryParser(TransactionManager tm) {
-    this.tm = tm;
+  QueryParser(TransactionManager manager) {
+    this.manager = manager;
   }
   
   public void startParsing(String file) {
-    String line = null;
+    String readLine = null;
     
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-      while ((line = reader.readLine()) != null) {
-        if (line.startsWith("//")) {
+      while ((readLine = reader.readLine()) != null) {
+        if (readLine.startsWith("//")) {
           continue;
         }
-        parseLine(line, true);
+        parse(readLine, true);
       }
-    } catch (Exception e) {
-      // Do nothing, simply return.
+    } catch (IOException ioe) {
+      System.err.println("Error encountered when parse file.");
     }
   }
 
-  private boolean parseLine(String line, boolean shouldAddTime) {
-    if (shouldAddTime) {
+  private void parse(String input, boolean incrementTime) {
+    if (incrementTime) {
       time++;
     }
+    String query = input.replaceAll(" ", "");
     
-    line = line.replaceAll(" ", "");
-    
-    if (line.contains(";")) {
-      String[] opArray = line.split(";");
-      for (String op : opArray) {
-        parseLine(op, false);
+    if (query.contains(";")) {
+      String[] queries = query.split(";");
+      for (int i = 0; i < queries.length; i++) {
+        parse(queries[i], false);
       }
-    } else if (line.startsWith("begin(")) {
-      tm.begin(line.substring(6, line.length() - 1), time, false);
-    } else if (line.startsWith("beginRO(")) {
-      tm.begin(line.substring(8, line.length() - 1), time, true);
-    } else if (line.contains("R(")) {
-      callRead(line);
-    } else if (line.contains("W(")) {
-      callWrite(line);
-    } else if (line.startsWith("end(")) {
-      tm.end(tm.transactionList.get(line.substring(4, line.length() - 1)), true);
-    } else if (line.contains("fail(")) {
-      tm.fail(findSiteID(line));
-    } else if (line.contains("recover(")) {
-      tm.recover(findSiteID(line));
-    } else if (line.startsWith("dump()")) {
-      tm.dump();
-    } else if (line.startsWith("dump(x")) {
-      tm.dump(findXID(line));
-    } else if (line.startsWith("dump(")) {
-      SimulatedSite[] sites = tm.sites;
-      sites[findSiteID(line) - 1].dump();
+    } else if (query.startsWith("begin(")) {
+      manager.begin(query.substring(6, query.length() - 1), time, false);
+    } else if (query.startsWith("beginRO(")) {
+      manager.begin(query.substring(8, query.length() - 1), time, true);
+    } else if (query.startsWith("R(")) {
+      String[] splitted = query.substring(2, query.indexOf(")")).split(",");
+      manager.read(splitted[0], splitted[1]);
+    } else if (query.startsWith("W(")) {
+      String[] splitted = query.substring(2, query.indexOf(")")).split(",");
+      manager.write(splitted[0], splitted[1], Integer.parseInt(splitted[2]));
+    } else if (query.startsWith("end(")) {
+      manager.end(manager.transactionList.get(query.substring(4, query.length() - 1)), true);
+    } else if (query.startsWith("fail(")) {
+      manager.fail(Integer.parseInt(query.substring(5, query.length() - 1)));
+    } else if (query.startsWith("recover(")) {
+      manager.recover(Integer.parseInt(query.substring(8, query.length() - 1)));
+    } else if (query.startsWith("dump()")) {
+      manager.dump();
+    } else if (query.startsWith("dump(x")) {
+      manager.dump(query.substring(5, query.length() - 1));
+    } else if (query.startsWith("dump(")) {
+      manager.sites[Integer.parseInt(query.substring(5, query.length() - 1)) - 1].dump();
     }
-    
-    return true;
-  }
-
-  /**
-   * find the Transaction ID in an input command
-   * 
-   * @param string
-   * @return TID
-   */
-//  private String findTID(String s) {
-//    int firstP = s.indexOf("(");
-//    int lastP = s.indexOf(")");
-//
-//    return s.substring(firstP + 1, lastP);
-//  }
-
-  /**
-   * find the X Position ID in an input command
-   * 
-   * @param string
-   * @return x position ID
-   */
-  private String findXID(String s) {
-    int firstP = s.indexOf("(");
-    int lastP = s.indexOf(")");
-
-    return s.substring(firstP + 1, lastP);
-  }
-
-  /**
-   * find the Site ID in an input command
-   * 
-   * @param string
-   * @return site ID
-   */
-  private int findSiteID(String s) {
-    int firstP = s.indexOf("(");
-    int lastP = s.indexOf(")");
-
-    String siteId = s.substring(firstP + 1, lastP);
-
-    return Integer.parseInt(siteId);
-  }
-
-  /**
-   * find the variables in a read command, and call read function in Action
-   * class
-   * 
-   * @param string
-   */
-  public void callRead(String s) {
-    int firstP = s.indexOf("(");
-    int lastP = s.indexOf(")");
-
-    String variablesString = s.substring(firstP + 1, lastP);
-    String[] variables = variablesString.split(",");
-
-    tm.read(variables[0], variables[1]);
-
-  }
-
-  /**
-   * find the variables in a write command, and call write function in Action
-   * class
-   * 
-   * @param string
-   */
-  public void callWrite(String s) {
-    int firstP = s.indexOf("(");
-    int lastP = s.indexOf(")");
-
-    String variablesString = s.substring(firstP + 1, lastP);
-    String[] variables = variablesString.split(",");
-
-    tm.write(variables[0], variables[1], Integer.parseInt(variables[2]));
   }
 }
