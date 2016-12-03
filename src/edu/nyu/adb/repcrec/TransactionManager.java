@@ -243,6 +243,15 @@ class TransactionManager {
   
   boolean detectDeadlock(HashSet<Conflict> conflicts) {
     HashSet<String> visited = new HashSet<>();
+    HashSet<String> waitings = new HashSet<>();
+    HashMap<String, ArrayList<String>> map = new HashMap<>();
+    
+    ArrayList<String> current = null;
+    for (Conflict conflict: conflicts) {
+      waitings.add(conflict.waiting);
+      current = map.containsKey(conflict.waiting) ? map.get(conflict.waiting) : new ArrayList<>();
+      current.add(conflict.waited);
+    }
     
 //    while (!conflicts.isEmpty()) {
 //      
