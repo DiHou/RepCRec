@@ -39,7 +39,7 @@ class TransactionManager {
   void read(String transactionName, String key) {
     Transaction transaction = transactionMapping.get(transactionName);
     if (transaction == null) {
-      return;
+      return;  //simply ignore it
     }
     
     if (transaction.isReadOnly) {
@@ -50,77 +50,70 @@ class TransactionManager {
       } else {
         abort(transaction);
       }
-    } else {
-      int i = 0;
-      
-      for (; i < sites.length; i++) {
-        // If not read-only type, get the first working site which contains that variable
-        if (!sites[i].isDown && sites[i].database.containsKey(key)) {
-          ItemInfo itemInfo = sites[i].database.get(key);
+      return;
+    }
+    
+    // If the transaction is not read-only, get its value from an alive site which stores its 
+    // information. If all the site that stores its info is down, add it to unfinished and return.
+    for (int i = 0; i < sites.length; i++) {
+      if (sites[i].isDown) {
+        continue;
+      } else if (sites[i].database.containsKey(key)) {
+        ItemInfo itemInfo = sites[i].database.get(key);
+        
+        if (itemInfo.isReadyForRead && !itemInfo.isWriteLocked()) {
+          LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
           
-          // Need to check if the variable is ready for read, and make sure it does not have a 
-          // write lock on it
-          if (itemInfo.isReadyForRead && !itemInfo.isWriteLocked()) {
-            // Get a new lock and put it inside the lock list of that variable
+          itemInfo.lockList.add(lock);
+          sites[i].addLock(lock);
+          transaction.locksHolding.add(lock);
+          
+          System.out.print("Read by " + transaction.name + ", ");
+          print(itemInfo.key, itemInfo.value, i + 1);
+          return;
+        } else if (itemInfo.isReadyForRead) {  // item is write locked
+          // if it is locked by itself
+          if (itemInfo.getWriteLock().transaction.name.equals(transaction.name)) {
             LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
             
             itemInfo.lockList.add(lock);
             sites[i].addLock(lock);
             transaction.locksHolding.add(lock);
-            
             System.out.print("Read by " + transaction.name + ", ");
-            print(itemInfo.key, itemInfo.value, i + 1);
-            break;
-          } else if (itemInfo.isReadyForRead) {  // item is write locked
-            // First check if the transaction holding the lock is the same with the current 
-            // transaction. If so, print out the value of that write lock even if the transaction 
-            // has not committed. If not, check whether the current transaction should wait for the 
-            // transaction holding the write lock also check if all the transactions in the wait 
-            // list of that variable are younger than the current transaction. Otherwise, there is 
-            // no need to wait if decide not to wait, put the lock (which represents an operation 
-            // to be performed later) to the wait list
-            if (itemInfo.getWriteLock().transaction.name.equals(transaction.name)) {
-              LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
-              
-              itemInfo.lockList.add(lock);
-              sites[i].addLock(lock);
-              transaction.locksHolding.add(lock);
-              System.out.print("Read by " + transaction.name + ", ");
-              print(itemInfo.key, itemInfo.getWriteLock().value, itemInfo.getWriteLock().site.siteID);
-            } else if (itemInfo.getWriteLock().transaction.initTime > transaction.initTime 
-                && itemInfo.canWait(transaction)) {
-              LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
-              
-              itemInfo.waitList.add(lock);
-              sites[i].addLock(lock);
-              transaction.locksHolding.add(lock);
-            } else {
-              abort(transaction);
-            }
-            break;
+            print(itemInfo.key, itemInfo.getWriteLock().value, itemInfo.getWriteLock().site.siteID);
+          } else {
+            LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
+            
+            itemInfo.waitList.add(lock);
+            sites[i].addLock(lock);
+            transaction.locksHolding.add(lock);
           }
-        }
-      }
-      
-      // does not find a working site containing the variable, abort
-      if (i == sites.length) {
-        if (!isReplicated(key)) {
-          for (int pos = 0; pos < sites.length; pos++) {
-            if (sites[pos].database.containsKey(key) && sites[pos].isDown) {
-              LockInfo lock = new LockInfo(transaction, sites[pos].database.get(key), sites[pos], LockType.READ, 
-                  0, true); 
-              sites[pos].addLock(lock);
-              transaction.locksHolding.add(lock);
-              sites[pos].database.get(key).lockList.add(lock);
-              break;
-            } 
-          }
-        }
-        else {
-          abort(transaction);
+          return;
         }
       }
     }
+    
+    //!!!! need to handle the case that every site that contains the item is down
+    //add to the unfinished hashmap for processing.
+    
+    // does not find a working site containing the variable, abort
+//    if (i == sites.length) {
+//      if (!isReplicated(key)) {
+//        for (int pos = 0; pos < sites.length; pos++) {
+//          if (sites[pos].database.containsKey(key) && sites[pos].isDown) {
+//            LockInfo lock = new LockInfo(transaction, sites[pos].database.get(key), sites[pos], LockType.READ, 
+//                0, true); 
+//            sites[pos].addLock(lock);
+//            transaction.locksHolding.add(lock);
+//            sites[pos].database.get(key).lockList.add(lock);
+//            break;
+//          } 
+//        }
+//      }
+//      else {
+//        abort(transaction);
+//      }
+//    }
   }
 
   void write(String transactionName, String key, int value) {
@@ -130,76 +123,78 @@ class TransactionManager {
       return;
     }
     
-    boolean shouldAbort = true;
+//    boolean shouldAbort = true;
     
     for (int i = 0; i < sites.length; i++) {
-      // need to check if the variable is ready for read,
-      // and make sure it does not have any lock on it (except for the lock held by itself)
-      if (!sites[i].isDown && sites[i].database.containsKey(key)) {
+      if (sites[i].isDown) {
+        continue;
+      } else if (sites[i].database.containsKey(key)) {
         ItemInfo itemInfo = sites[i].database.get(key);
-        if (!itemInfo.hasLock()) {
-          // if it does not have lock, get a new lock
+        if (!itemInfo.hasLock()) {    // if the item does not have any lock
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
+          
           itemInfo.lockList.add(lock);
           sites[i].addLock(lock);
           transaction.locksHolding.add(lock);
-          shouldAbort = false;
+//          shouldAbort = false;
         } else {
           List<LockInfo> lockList = itemInfo.getLockList();
-          // if it already has a lock, first check if it is itself holding the lock
-          int pos = 0;
-          for (; pos < lockList.size(); pos++) {
-            if (!lockList.get(pos).transaction.name.equals(transaction.name)) {
-              break;
-            }
-          }
-          // if it's not itself, decide if it should wait
-          if (pos != lockList.size()) {
-            for (LockInfo lock : lockList) {
-              if (lock.transaction.initTime < transaction.initTime) {
-                abort(transaction);
-                break;
-              }
-            }
-            if (!itemInfo.canWait(transaction)) {
-              abort(transaction);
+          
+          // Check whether only itself owns the lock.
+          boolean lockOnlyOwnedBySelf = true;
+          int lockListSize = lockList.size();
+          for (int j = 0; j < lockListSize; j++) {
+            if (!lockList.get(j).transaction.name.equals(transaction.name)) {
+              lockOnlyOwnedBySelf = false;
               break;
             }
           }
           
-          // if it's only itself or it decides to wait,
-          // get a new lock and put it in the lock list or wait list
+          // If it's not itself, decide if it should wait
+//          if (!lockOnlyOwnedBySelf) {
+//            for (LockInfo lock : lockList) {
+//              if (lock.transaction.initTime < transaction.initTime) {
+//                abort(transaction);
+//                break;
+//              }
+//            }
+//            if (!itemInfo.canWait(transaction)) {
+//              abort(transaction);
+//              break;
+//            }
+//          }
+          
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
-          if (pos == lockList.size()) {
-              itemInfo.lockList.add(lock);
-          }
-          else {
+          if (lockOnlyOwnedBySelf) {
+            itemInfo.lockList.add(lock);
+          } else {
             itemInfo.waitList.add(lock); 
           }
+          
           sites[i].addLock(lock);
           transaction.locksHolding.add(lock);
-          shouldAbort = false;
+//          shouldAbort = false;
         }
       }
     }
     
-    if (shouldAbort) {
-      if (!isReplicated(key)) {
-        for (int pos = 0; pos < sites.length; pos++) {
-          if (sites[pos].database.containsKey(key) && sites[pos].isDown) {
-            LockInfo lock = new LockInfo(transaction, sites[pos].database.get(key), sites[pos], LockType.WRITE, 
-                value, true); 
-            sites[pos].addLock(lock);
-            transaction.locksHolding.add(lock);
-            sites[pos].database.get(key).lockList.add(lock);
-            break;
-          } 
-        }
-      }
-      else {
-        abort(transaction);
-      }
-    }
+//    if (shouldAbort) {
+//      if (!isReplicated(key)) {
+//        for (int pos = 0; pos < sites.length; pos++) {
+//          if (sites[pos].database.containsKey(key) && sites[pos].isDown) {
+//            LockInfo lock = new LockInfo(transaction, sites[pos].database.get(key), sites[pos], LockType.WRITE, 
+//                value, true); 
+//            sites[pos].addLock(lock);
+//            transaction.locksHolding.add(lock);
+//            sites[pos].database.get(key).lockList.add(lock);
+//            break;
+//          } 
+//        }
+//      }
+//      else {
+//        abort(transaction);
+//      }
+//    }
   }
 
   void abort(Transaction transaction) {
@@ -222,6 +217,11 @@ class TransactionManager {
     transactionMapping.remove(transaction.name);
   }
 
+  void deadLockCheckAndHandle() {
+    
+  }
+  
+  
   void fail(int siteNumber) {
     sites[siteNumber - 1].fail();
   }

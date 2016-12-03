@@ -45,9 +45,11 @@ class QueryParser {
     } else if (query.startsWith("R(")) {
       String[] splitted = query.substring(2, query.indexOf(")")).split(",");
       manager.read(splitted[0], splitted[1]);
+      manager.deadLockCheckAndHandle();
     } else if (query.startsWith("W(")) {
       String[] splitted = query.substring(2, query.indexOf(")")).split(",");
       manager.write(splitted[0], splitted[1], Integer.parseInt(splitted[2]));
+      manager.deadLockCheckAndHandle();
     } else if (query.startsWith("end(")) {
       manager.end(manager.transactionMapping.get(query.substring(4, query.length() - 1)), true);
     } else if (query.startsWith("fail(")) {
