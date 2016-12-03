@@ -276,45 +276,4 @@ public class TransactionManager {
       sites[i].dump(key);
     }
   }
-  
-  /**
-   * testing 12 files together, for testing purpose
-   */
-  public void test12Files(){
-    for (int i = 1; i <= 12; i++) {
-       initialize();
-      
-       QueryParser parser = new QueryParser(this);
-       StringBuilder temp = new StringBuilder();
-      
-       temp.append("input");
-       temp.append(i);
-       temp.append(".txt");
-      
-       String fileName = temp.toString();
-      
-       System.out.println("******Output " + i + "******");
-       System.out.println();
-       parser.startParsing(fileName);
-       System.out.println();
-       }
-    
-  }
-
-//  /**
-//   * program entrance
-//   */
-//  public static void main(String[] args) {
-//    // test12Files();
-//    
-//    if (args.length < 0) {
-//      return;
-//    }
-//    System.out.println("Input file: " + args[0]);
-//    
-//    TransactionManager tm = new TransactionManager();
-//    tm.initialize();
-//    new QueryParser(tm).startParsing(args[0]);
-//  }
-
 }

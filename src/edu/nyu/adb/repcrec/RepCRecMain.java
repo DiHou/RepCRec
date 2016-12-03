@@ -3,8 +3,6 @@ package edu.nyu.adb.repcrec;
 public class RepCRecMain {
 
   public static void main(String[] args) {
-    // test12Files();
-    
     if (args.length < 0) {
       return;
     }
