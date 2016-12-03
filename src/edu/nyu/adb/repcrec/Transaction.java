@@ -4,31 +4,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * The transaction class is contains all the functions and variables needed for
- * the transaction for the distributed database, including locks.
- *
- */
 public class Transaction {
   final String name;
-  final boolean isReadOnly;
   final int initTime;
-  TransactionManager tm;
+  final boolean isReadOnly;
+  TransactionManager manager;
   List<LockInfo> lockTable; // the locks the transaction is currently holding
   HashMap<String, Integer[]> readOnly; // stores all 'caches' for read-only
 
-  /**
-   * transaction constructor
-   * 
-   * @param name
-   * @param time
-   * @param b
-   */
-  public Transaction(String name, int initTime, boolean b, TransactionManager tm) {
+  public Transaction(String name, int initTime, boolean isReadOnly, TransactionManager manager) {
     this.name = name;
-    this.isReadOnly = b;
     this.initTime = initTime;
-    this.tm = tm;
+    this.isReadOnly = isReadOnly;
+    this.manager = manager;
     lockTable = new ArrayList<LockInfo>();
     
     //get the values of the variables at this particular point,
@@ -36,19 +24,13 @@ public class Transaction {
     if (isReadOnly) {
       readOnly = new HashMap<String, Integer[]>();
       for (int i = 1; i <= 20; i++) {
-        StringBuilder temp = new StringBuilder();
-        
-        temp.append('x');
-        temp.append(i);
-        String vName = temp.toString();
-        SimulatedSite[] sites = tm.sites;
+        String item = "x" + i;
+        SimulatedSite[] sites = manager.sites;
         
         for (int j = 0; j < sites.length; j++) {
-          if (sites[j].database.containsKey(vName)) {
-            readOnly.put(vName, new Integer[] {
-                sites[j].database.get(vName).value, j + 1 });
+          if (sites[j].database.containsKey(item)) {
+            readOnly.put(item, new Integer[] {sites[j].database.get(item).value, j + 1});
             //System.out.printf("%d, %s\n",sites[j].getVariable(vName).getValue(), vName);
-            
             break;
           }
         }
@@ -57,57 +39,27 @@ public class Transaction {
     }
   }
 
-  /**
-   * check if contains Read Only
-   * 
-   * @param vName
-   * @return boolean if contains Read Only
-   */
-  public boolean containsReadOnly(String vName) {
-    return readOnly.containsKey(vName);
+  public boolean containsReadOnly(String item) {
+    return readOnly.containsKey(item);
   }
   
-  /**
-   * add a lock in lockTable
-   */
-  public void placeLock(LockInfo lock) {
+  public void addLock(LockInfo lock) {
     lockTable.add(lock);
   }
 
   /**
-   * time getter
-   * 
-   * @return time
+   * actually commit write operations when a transaction commits
    */
-//  public int getTime() {
-//    return initTime;
-//  }
-
-  /**
-   * realizeLocks
-   * 
-   * when a site commits, perform write operation if there's any
-   */
-  public void realizeLocks() {
-    
-    for (LockInfo lock : lockTable) {
-      if (lock.isActive && lock.lockType == LockType.WRITE) {
-        
-        lock.itemInfo.value = lock.value;
-        
-        //mark all the variables as ready_for_read
-        lock.itemInfo.isReadyForRead = true;
+  public void commitWrites() {
+    for (LockInfo lockInfo : lockTable) {
+      if (lockInfo.isActive && lockInfo.lockType == LockType.WRITE) {
+        lockInfo.itemInfo.value = lockInfo.value;
+        lockInfo.itemInfo.isReadyForRead = true;
       }
     }
   }
 
-  /**
-   * nullifyLocks
-   * 
-   * when a site ends (whether commit or abort),
-   * release all the locks by marking them as inactive
-   */
-  public void nullifyLocks() {
+  public void releaseLocks() {
     for (LockInfo lock : lockTable) {
       lock.isActive = false;
       lock.itemInfo.update();

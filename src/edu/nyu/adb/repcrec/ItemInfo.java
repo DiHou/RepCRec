@@ -38,7 +38,6 @@ public class ItemInfo {
    * @return boolean if the variable has write lock
    */
   public boolean hasWriteLock() {
-
     cleanLock();
 
     // Normally if there's a write lock, it must be the first and only lock in the
@@ -106,7 +105,6 @@ public class ItemInfo {
    * list
    */
   public void cleanWait() {
-
     for (int i = 0; i < waitList.size();) {
       LockInfo lock = waitList.get(i);
       if (!lock.isActive) {
@@ -117,12 +115,7 @@ public class ItemInfo {
     }
   }
 
-  /**
-   * place a lock on the variable
-   * 
-   * @param lock
-   */
-  public void placeLock(LockInfo lock) {
+  public void addLock(LockInfo lock) {
     lockList.add(lock);
   }
 
@@ -162,9 +155,8 @@ public class ItemInfo {
   public void update() {
     cleanLock();
     cleanWait();
-
+    
     if (lockList.size() == 0 && waitList.size() > 0) {
-
       if (waitList.get(0).lockType == LockType.WRITE) {
         Transaction t = waitList.get(0).transaction;
         lockList.add(waitList.get(0));
@@ -179,7 +171,7 @@ public class ItemInfo {
           LockInfo lock = waitList.get(0);
           lockList.add(lock);
           waitList.remove(0);
-
+          
           System.out.print("Read by "
               + lock.transaction.name + ", ");
           print(lock.itemInfo.key, lock.site.siteID, lock.itemInfo.value);

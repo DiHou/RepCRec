@@ -9,7 +9,6 @@ import java.util.List;
  *
  */
 public class TransactionManager {
-
   HashMap<String, Transaction> transactionList;
   SimulatedSite[] sites;
 
@@ -30,9 +29,7 @@ public class TransactionManager {
         
         if (j % 2 == 0) {
           sites[i].database.put(item, itemInfo);
-        } else if (i == 9 && (j == 9 || j == 19)) {
-          sites[i].database.put(item, itemInfo);
-        } else if (((j + 1) % 10) == i + 1) {
+        } else if (j % 10 == i) {
           sites[i].database.put(item, itemInfo);
         }
       }
@@ -83,9 +80,9 @@ public class TransactionManager {
             // that variable
             LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
             
-            v.placeLock(lock);
+            v.addLock(lock);
             sites[i].addLock(lock);
-            t.placeLock(lock);
+            t.addLock(lock);
             
             // print out the read value
             System.out.print("Read by " + t.name + ", ");
@@ -107,9 +104,9 @@ public class TransactionManager {
             if (v.getWriteLock().transaction.name.equals(t.name)) {
               LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
               
-              v.placeLock(lock);
+              v.addLock(lock);
               sites[i].addLock(lock);
-              t.placeLock(lock);
+              t.addLock(lock);
               System.out.print("Read by " + t.name + ", ");
               print(v.key, v.getWriteLock().site.siteID, v.getWriteLock().value);
             }
@@ -118,7 +115,7 @@ public class TransactionManager {
               
               v.waitList.add(lock);
               sites[i].addLock(lock);
-              t.placeLock(lock);
+              t.addLock(lock);
             } else {
               abort(t);
             }
@@ -135,8 +132,8 @@ public class TransactionManager {
               LockInfo lock = new LockInfo(t, sites[pos].database.get(key), sites[pos], LockType.READ, 
                   0, true); 
               sites[pos].addLock(lock);
-              t.placeLock(lock);
-              sites[pos].database.get(key).placeLock(lock);
+              t.addLock(lock);
+              sites[pos].database.get(key).addLock(lock);
               break;
             } 
           }
@@ -166,9 +163,9 @@ public class TransactionManager {
         if (!v.hasLock()) {
           // if it does not have lock, get a new lock
           LockInfo lock = new LockInfo(t, v, sites[i], LockType.WRITE, value, true);
-          v.placeLock(lock);
+          v.addLock(lock);
           sites[i].addLock(lock);
-          t.placeLock(lock);
+          t.addLock(lock);
           shouldAbort = false;
         } else {
           List<LockInfo> lockList = v.getLockList();
@@ -197,13 +194,13 @@ public class TransactionManager {
           // get a new lock and put it in the lock list or wait list
           LockInfo lock = new LockInfo(t, v, sites[i], LockType.WRITE, value, true);
           if (pos == lockList.size()) {
-              v.placeLock(lock);
+              v.addLock(lock);
           }
           else {
             v.waitList.add(lock); 
           }
           sites[i].addLock(lock);
-          t.placeLock(lock);
+          t.addLock(lock);
           shouldAbort = false;
         }
       }
@@ -216,8 +213,8 @@ public class TransactionManager {
             LockInfo lock = new LockInfo(t, sites[pos].database.get(key), sites[pos], LockType.WRITE, 
                 value, true); 
             sites[pos].addLock(lock);
-            t.placeLock(lock);
-            sites[pos].database.get(key).placeLock(lock);
+            t.addLock(lock);
+            sites[pos].database.get(key).addLock(lock);
             break;
           } 
         }
@@ -246,10 +243,10 @@ public class TransactionManager {
     // difference between commit and abort is that if all the locks should
     // be 'realized', or simply discarded
     if (toCommit) {
-      transaction.realizeLocks();
+      transaction.commitWrites();
     }
     
-    transaction.nullifyLocks();
+    transaction.releaseLocks();
     transactionList.remove(transaction.name);
   }
 
