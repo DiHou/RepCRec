@@ -33,7 +33,7 @@ class SimulatedSite {
     System.out.println("Site " + siteID + " failed");
 
     for (LockInfo lock : lockTable) {
-      lock.isActive = false;
+      lock.isValid = false;
       manager.abort(manager.transactionMapping.get(lock.transaction.name));
     }
     lockTable.clear();
