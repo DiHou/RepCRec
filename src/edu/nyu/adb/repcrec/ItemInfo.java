@@ -9,8 +9,6 @@ import java.util.List;
  * it lists of all the locks currently placed on this (copy of); the waitList in
  * it lists of all the locks which will be placed on this (copy of) variable,
  * currently are waiting for other locks to release.
- * 
- *
  */
 public class ItemInfo {
   String key;

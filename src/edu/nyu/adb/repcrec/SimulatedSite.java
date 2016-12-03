@@ -6,18 +6,18 @@ import java.util.List;
 
 public class SimulatedSite {
   final int siteID;
-  boolean isDown;
   final TransactionManager manager;
   HashMap<String, ItemInfo> database;
   List<LockInfo> lockTable;
+  boolean isDown;
   //List<Lock> waitForReadyReadTable; // if necessary, store all the read transactions waiting for the variable to become ready
 
   public SimulatedSite(int siteID, TransactionManager manager) {
     this.siteID = siteID;
-    this.isDown = false;
     this.manager = manager;
     this.database = new HashMap<String, ItemInfo>();
     this.lockTable = new ArrayList<LockInfo>();
+    this.isDown = false;
   }
   
   /**
@@ -61,7 +61,7 @@ public class SimulatedSite {
       if (database.containsKey(item)) {
         ItemInfo itemInfo = database.get(item);
         if (itemInfo.isReadyForRead) {
-          manager.print(itemInfo.key, siteID, itemInfo.value);
+          manager.print(itemInfo.key, itemInfo.value, siteID);
         }
       }
     }
@@ -70,7 +70,7 @@ public class SimulatedSite {
   public void dump(String key) {
     if (database.containsKey(key)) {
       ItemInfo itemInfo = database.get(key);
-      manager.print(itemInfo.key, siteID, itemInfo.value);
+      manager.print(itemInfo.key, itemInfo.value, siteID);
     }
   }
 }

@@ -12,8 +12,8 @@ public class TransactionManager {
   HashMap<String, Transaction> transactionList;
   SimulatedSite[] sites;
 
-  public void print(String vName, int siteNumber, int value) {
-    System.out.println(vName + ": " + value + " at site " + siteNumber);
+  public void print(String item, int value, int siteNumber) {
+    System.out.println(item + ": " + value + " at site " + siteNumber);
   }
 
   public void initialize() {
@@ -60,7 +60,7 @@ public class TransactionManager {
       if (t.containsReadOnly(key)) {
         System.out.print("Read by " + t.name + ", ");
         Integer[] array = t.readOnly.get(key);
-        print(key, array[1], array[0]);
+        print(key, array[0], array[1]);
       } else {
         abort(t);
       }
@@ -86,7 +86,7 @@ public class TransactionManager {
             
             // print out the read value
             System.out.print("Read by " + t.name + ", ");
-            print(v.key, i + 1, v.value);
+            print(v.key, v.value, i + 1);
             break;
             
             // if the variable has a write lock
@@ -108,7 +108,7 @@ public class TransactionManager {
               sites[i].addLock(lock);
               t.addLock(lock);
               System.out.print("Read by " + t.name + ", ");
-              print(v.key, v.getWriteLock().site.siteID, v.getWriteLock().value);
+              print(v.key, v.getWriteLock().value, v.getWriteLock().site.siteID);
             }
             else if (v.getWriteLock().transaction.initTime > t.initTime && v.canWait(t)) {
               LockInfo lock = new LockInfo(t, v, sites[i], LockType.READ, 0, true);
