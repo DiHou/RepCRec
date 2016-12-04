@@ -22,4 +22,9 @@ class Conflict {
     Conflict other = (Conflict) objectToCompare;
     return this.waiting.equals(other.waiting) && this.waited.equals(other.waited);
   }
+  
+  @Override
+  public int hashCode() {
+    return 31 * waiting.hashCode() + waited.hashCode();
+  }
 }
