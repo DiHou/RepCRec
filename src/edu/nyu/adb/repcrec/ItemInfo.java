@@ -24,7 +24,7 @@ class ItemInfo {
   }
   
   boolean isWriteLocked() {
-    removeInvalidLockInLockList();
+    validateLockList();
     
     for (LockInfo lock: lockList) {
       if (lock.lockType == LockType.WRITE) {
@@ -35,7 +35,7 @@ class ItemInfo {
   }
   
   LockInfo getWriteLockInfo() {
-    removeInvalidLockInLockList();
+    validateLockList();
     for (LockInfo lockInfo: lockList) {
       if (lockInfo.lockType == LockType.WRITE) {
         return lockInfo;
@@ -45,17 +45,17 @@ class ItemInfo {
   }
 
   boolean isReadOrWriteLocked() {
-    removeInvalidLockInLockList();
+    validateLockList();
     return lockList.size() != 0;
   }
 
   // Remove invalid locks of which transaction is aborted or site is down on locklist.
-  void removeInvalidLockInLockList() {
+  void validateLockList() {
     removeInvalidLock(lockList);
   }
 
   // Remove invalid locks of which transaction is aborted or site is down on waitlist.
-  void removeInvalidLockInWaitList() {
+  void validateWaitList() {
     removeInvalidLock(waitList);
   }
 
@@ -71,7 +71,7 @@ class ItemInfo {
   }
 
   ArrayList<LockInfo> getLockList() {
-    removeInvalidLockInLockList();
+    validateLockList();
     return lockList;
   }
 
@@ -92,8 +92,8 @@ class ItemInfo {
    * wait list also should be moved to the active lock list.
    */
   void updateItemLockStatus() {
-    removeInvalidLockInLockList();
-    removeInvalidLockInWaitList();
+    validateLockList();
+    validateWaitList();
     
     if (lockList.size() == 0 && waitList.size() > 0) {
       if (waitList.get(0).lockType == LockType.WRITE) {
