@@ -208,11 +208,16 @@ class TransactionManager {
   }
 
   void end(Transaction transaction, boolean toCommit) {
-    if (transaction == null || !transactionMapping.containsKey(transaction.name)) {
+    if (transaction == null) {
       return;
     }
     
-    System.out.println(transaction.name + (toCommit ? " committed" : " aborted"));
+    if (toCommit) {
+      System.out.println(transaction.name + " committed");
+    }
+    if (!toCommit) {
+      System.out.println(transaction.name + " aborted");
+    }
     
     // Commit writes if the transaction is to commit.
     if (toCommit) {
@@ -226,15 +231,15 @@ class TransactionManager {
   void deadLockCheckAndHandle() {
     HashSet<Conflict> conflicts = constructConflicts();
     HashSet<String> deadLockCycle = detectDeadlockCycle(conflicts);
-//    System.out.println("Deadlock? " + deadlock);
+//    System.out.println("Deadlock? " + (deadLockCycle == null));
     if (deadLockCycle != null) {
       System.out.println("There is deadlock");
       Transaction youngest = null, transaction = null;
-      int initTime = Integer.MAX_VALUE;
+      int initTime = -1;
       
       for (String transactionName: deadLockCycle) {
         transaction = transactionMapping.get(transactionName);
-        if (transaction.initTime < initTime) {
+        if (transaction.initTime > initTime) {
           youngest = transaction;
           initTime = transaction.initTime;
         }
