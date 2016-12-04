@@ -115,8 +115,4 @@ class ItemInfo {
       }
     }
   }
-  
-  void print(String key, int value, int siteNumber) {
-    System.out.println(key + ": " + value + " at site " + siteNumber);
-  }
 }

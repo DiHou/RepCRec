@@ -164,12 +164,15 @@ class TransactionManager {
       return;
     }
     
+//    System.out.println(transaction.name + "starts committing...");
     System.out.println(transaction.name + (toCommit ? " committed" : " aborted"));
     
     // Commit writes if the transaction is to commit.
     if (toCommit) {
       transaction.commitReadsAndWrites();
     }
+    
+//    System.out.println(transaction.name + " is "+ (toCommit ? "committed" : "aborted"));
     
     transaction.releaseLocks();
     updateConflicts(transaction.name);
@@ -187,7 +190,6 @@ class TransactionManager {
     HashSet<String> deadLockCycle = detectDeadlockCycle(conflicts);
 //    System.out.println("Deadlock? " + (deadLockCycle != null));
     if (deadLockCycle != null) {
-//      System.out.println("There is deadlock");
       Transaction youngest = null, transaction = null;
       int initTime = -1;
       
@@ -293,9 +295,7 @@ class TransactionManager {
     sites[siteNumber - 1].recover();
   }
 
-  /**
-   * dump all items in each site
-   */
+  // dump all items in each site
   void dump() {
     for (int i = 0; i < sites.length; i++) {
       sites[i].dump();
@@ -303,9 +303,7 @@ class TransactionManager {
     }
   }
 
-  /**
-   * dump a specific item in each site
-   */
+  // dump a specific item in each site
   void dump(String key) {
     for (int i = 0; i < sites.length; i++) {
       sites[i].dump(key);

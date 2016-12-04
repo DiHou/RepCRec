@@ -18,6 +18,7 @@ class SimulatedSite {
   HashSet<Conflict> conflicts;
   boolean isDown;
 
+  // Update conflicts when some transaction commits / aborts.
   void updateConflicts(String transactionName) {
     HashSet<Conflict> newConflicts = new HashSet<>();
     for (Conflict conflict: conflicts) {
@@ -60,9 +61,7 @@ class SimulatedSite {
     }
   }
   
-  /**
-   * When a site fails, mark all the locks on this site as inactive before erasing the lock table.
-   */
+  // Mark all the locks invalid, clear lockTable and conflict when a site fails.
   void fail() {
     isDown = true;
     System.out.println("Site " + siteID + " failed");
@@ -79,6 +78,7 @@ class SimulatedSite {
   void recover() {
     isDown = false;
     
+    // Set un-replicated item isReadyReady.
     for (ItemInfo itemInfo : database.values()) {
       if (!manager.isReplicated(itemInfo.key)) {
         itemInfo.isReadReady = true;
