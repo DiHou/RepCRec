@@ -63,67 +63,39 @@ class TransactionManager {
     
     // If the transaction is not read-only, get its value from an alive site which stores its 
     // information. If all the site that stores its info is down, add it to unfinished and return.
+    boolean foundAlive = false;
     for (int i = 0; i < sites.length; i++) {
       if (sites[i].isDown) {
         continue;
       } else if (sites[i].database.containsKey(key)) {
+        foundAlive = true;
         ItemInfo itemInfo = sites[i].database.get(key);
         
-        if (itemInfo.isReadReady && !itemInfo.isWriteLocked()) {
+        if (itemInfo.isReadReady) {
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
-          
-          itemInfo.lockList.add(lock);
           transaction.locksHolding.add(lock);
           sites[i].lockTable.add(lock);
           
-//          System.out.print("Read by " + transaction.name + ", ");
-//          print(itemInfo.key, itemInfo.value, i + 1);
-          return;
-        } else if (itemInfo.isReadReady) {  // item is write locked
-          LockInfo writeLock = itemInfo.getWriteLockInfo();
-          if (writeLock.transaction.name.equals(transaction.name)) {  // locked by self
-            LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
-            
-            itemInfo.lockList.add(lock);
-            transaction.locksHolding.add(lock);
-            sites[i].lockTable.add(lock);
-            
-//            System.out.print("Read by " + transaction.name + ", ");
-//            print(itemInfo.key, itemInfo.getWriteLockInfo().value, itemInfo.getWriteLockInfo().site.siteID);
+          if (itemInfo.isWriteLocked()) {
+            LockInfo writeLock = itemInfo.getWriteLockInfo();
+            if (writeLock.transaction.name.equals(transaction.name)) {  // it is locked by self
+              itemInfo.lockList.add(lock);
+            } else {
+              itemInfo.waitList.add(lock);
+              sites[i].conflicts.add(new Conflict(transactionName, writeLock.transaction.name));
+            }
           } else {
-            LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
-            
-            itemInfo.waitList.add(lock);
-            transaction.locksHolding.add(lock);
-            sites[i].lockTable.add(lock);
-            sites[i].conflicts.add(new Conflict(transactionName, writeLock.transaction.name));
+            itemInfo.lockList.add(lock);
           }
-          return;
+          break;
         }
       }
     }
     
-    // does not find a working site containing the variable, add to unfinished list
-    unfinished.put(transactionName, new Unfinished(transactionName, true, key));
-    
-    // does not find a working site containing the variable, abort
-//    if (i == sites.length) {
-//      if (!isReplicated(key)) {
-//        for (int pos = 0; pos < sites.length; pos++) {
-//          if (sites[pos].database.containsKey(key) && sites[pos].isDown) {
-//            LockInfo lock = new LockInfo(transaction, sites[pos].database.get(key), sites[pos], LockType.READ, 
-//                0, true); 
-//            sites[pos].addLock(lock);
-//            transaction.locksHolding.add(lock);
-//            sites[pos].database.get(key).lockList.add(lock);
-//            break;
-//          } 
-//        }
-//      }
-//      else {
-//        abort(transaction);
-//      }
-//    }
+    // No alive site contains the variable, add the query to unfinished list
+    if (!foundAlive) {
+      unfinished.put(transactionName, new Unfinished(transactionName, true, key));
+    }
   }
 
   void write(String transactionName, String key, int value) {
@@ -133,7 +105,6 @@ class TransactionManager {
       return;
     }
     
-//    boolean shouldAbort = true;
     boolean foundAlive = false;
     for (int i = 0; i < sites.length; i++) {
       if (sites[i].isDown) {
@@ -147,7 +118,6 @@ class TransactionManager {
           itemInfo.lockList.add(lock);
           sites[i].lockTable.add(lock);
           transaction.locksHolding.add(lock);
-//          shouldAbort = false;
         } else {
           ArrayList<LockInfo> lockList = itemInfo.getLockList();
           
@@ -160,20 +130,6 @@ class TransactionManager {
               break;
             }
           }
-          
-          // If it's not itself, decide if it should wait
-//          if (!lockOnlyOwnedBySelf) {
-//            for (LockInfo lock : lockList) {
-//              if (lock.transaction.initTime < transaction.initTime) {
-//                abort(transaction);
-//                break;
-//              }
-//            }
-//            if (!itemInfo.canWait(transaction)) {
-//              abort(transaction);
-//              break;
-//            }
-//          }
           
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           if (lockOnlyOwnedBySelf) {
@@ -189,7 +145,6 @@ class TransactionManager {
           
           transaction.locksHolding.add(lock);
           sites[i].lockTable.add(lock);
-//          shouldAbort = false;
         }
       }
     }
@@ -197,23 +152,6 @@ class TransactionManager {
     if (!foundAlive) {
       unfinished.put(transactionName, new Unfinished(transactionName, false, key, value));
     }
-//    if (shouldAbort) {
-//      if (!isReplicated(key)) {
-//        for (int pos = 0; pos < sites.length; pos++) {
-//          if (sites[pos].database.containsKey(key) && sites[pos].isDown) {
-//            LockInfo lock = new LockInfo(transaction, sites[pos].database.get(key), sites[pos], LockType.WRITE, 
-//                value, true); 
-//            sites[pos].addLock(lock);
-//            transaction.locksHolding.add(lock);
-//            sites[pos].database.get(key).lockList.add(lock);
-//            break;
-//          } 
-//        }
-//      }
-//      else {
-//        abort(transaction);
-//      }
-//    }
   }
 
   void abort(Transaction transaction) {
