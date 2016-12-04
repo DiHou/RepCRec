@@ -3,6 +3,7 @@ package edu.nyu.adb.repcrec;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 class TransactionManager {
   HashMap<String, Transaction> transactionMapping;
@@ -173,7 +174,9 @@ class TransactionManager {
           } else {
             itemInfo.waitList.add(lock);
             for (int j = 0; j < lockListSize; j++) {
-              sites[i].conflicts.add(new Conflict(transactionName, lockList.get(j).transaction.name));
+              if (!transactionName.equals(lockList.get(j).transaction.name)) {
+                sites[i].conflicts.add(new Conflict(transactionName, lockList.get(j).transaction.name));
+              }
             }
           }
           
@@ -276,7 +279,7 @@ class TransactionManager {
       if (visitedAll.contains(waiting)) {
         continue;
       }
-      if (dfs(waiting, new HashSet<>(), visitedAll, map, deadLockCycle)) {
+      if (dfs(waiting, new LinkedHashSet<>(), visitedAll, map, deadLockCycle)) {
         return deadLockCycle;
       }
     }
@@ -284,10 +287,10 @@ class TransactionManager {
     return null;
   }
   
-  private boolean dfs(String waiting, HashSet<String> visited, HashSet<String> visitedAll, 
+  private boolean dfs(String waiting, LinkedHashSet<String> visited, HashSet<String> visitedAll, 
       HashMap<String, ArrayList<String>> map, HashSet<String> deadLockCycle) {
     if (visited.contains(waiting)) {
-      deadLockCycle.addAll(visited);
+      getCycle(visited, waiting, deadLockCycle);
       return true;
     }
     visited.add(waiting);
@@ -298,15 +301,34 @@ class TransactionManager {
     }
     ArrayList<String> waiteds = map.get(waiting);
     
+    boolean findDeadlock = false;
     for (String waited: waiteds) {
-      if (dfs(waited, visited, visitedAll, map, deadLockCycle)) {
+      findDeadlock = dfs(waited, visited, visitedAll, map, deadLockCycle);
+      if (findDeadlock) {
         return true;
+      } else {
+        visited.remove(waited);
       }
     }
     
     return false;
   }
   
+  private void getCycle(LinkedHashSet<String> visited, String head, HashSet<String> deadLockCycle) {
+    boolean started = false;
+    for (String s: visited) {
+      if (started == false) {
+        if (head.equals(s)) {
+          deadLockCycle.add(s);
+          started = true;
+        } else {
+          continue;
+        }
+      } else {
+        deadLockCycle.add(s);
+      }
+    }
+  }
   void fail(int siteNumber) {
     sites[siteNumber - 1].fail();
   }
