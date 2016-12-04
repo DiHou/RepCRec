@@ -36,7 +36,7 @@ class QueryParser {
     if (incrementTime) {
       time++;
       
-      // Try unfinished queries, as a site may recover.
+      // Try unfinished queries first, as a site may recover.
       for (Unfinished unfinished: manager.unfinished.values()) {
         if (unfinished.isRead) {
           manager.read(unfinished.transactionName, unfinished.key);

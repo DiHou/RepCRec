@@ -30,23 +30,31 @@ class ItemInfo {
       if (lock.lockType == LockType.WRITE) {
         return true;
       }
-    } 
+    }
+    
     return false;
   }
 
   LockInfo getWriteLockInfo() {
     validateLockList();
+    
     for (LockInfo lockInfo: lockList) {
       if (lockInfo.lockType == LockType.WRITE) {
         return lockInfo;
       }
-    } 
+    }
+    
     return null;
   }
 
   boolean isReadOrWriteLocked() {
     validateLockList();
     return lockList.size() != 0;
+  }
+
+  ArrayList<LockInfo> getLockList() {
+    validateLockList();
+    return lockList;
   }
 
   // Remove invalid locks of which transaction is aborted or site is down on locklist.
@@ -68,11 +76,6 @@ class ItemInfo {
         i++;
       }
     }
-  }
-
-  ArrayList<LockInfo> getLockList() {
-    validateLockList();
-    return lockList;
   }
 
   /**
