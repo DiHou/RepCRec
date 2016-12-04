@@ -212,12 +212,7 @@ class TransactionManager {
       return;
     }
     
-    if (toCommit) {
-      System.out.println(transaction.name + " committed");
-    }
-    if (!toCommit) {
-      System.out.println(transaction.name + " aborted");
-    }
+    System.out.println(transaction.name + (toCommit ? " committed" : " aborted"));
     
     // Commit writes if the transaction is to commit.
     if (toCommit) {
@@ -231,15 +226,15 @@ class TransactionManager {
   void deadLockCheckAndHandle() {
     HashSet<Conflict> conflicts = constructConflicts();
     HashSet<String> deadLockCycle = detectDeadlockCycle(conflicts);
-//    System.out.println("Deadlock? " + (deadLockCycle == null));
+//    System.out.println("Deadlock? " + (deadLockCycle != null));
     if (deadLockCycle != null) {
-      System.out.println("There is deadlock");
+//      System.out.println("There is deadlock");
       Transaction youngest = null, transaction = null;
       int initTime = -1;
       
       for (String transactionName: deadLockCycle) {
         transaction = transactionMapping.get(transactionName);
-        if (transaction.initTime > initTime) {
+        if (transaction != null && transaction.initTime > initTime) {
           youngest = transaction;
           initTime = transaction.initTime;
         }
@@ -304,7 +299,7 @@ class TransactionManager {
     ArrayList<String> waiteds = map.get(waiting);
     
     for (String waited: waiteds) {
-      if (!visited.contains(waited) && dfs(waited, visited, visitedAll, map, deadLockCycle)) {
+      if (dfs(waited, visited, visitedAll, map, deadLockCycle)) {
         return true;
       }
     }
