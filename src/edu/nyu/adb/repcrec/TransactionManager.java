@@ -225,10 +225,22 @@ class TransactionManager {
 
   void deadLockCheckAndHandle() {
     HashSet<Conflict> conflicts = constructConflicts();
-    boolean deadlock = detectDeadlock(conflicts);
+    HashSet<String> deadLockCycle = detectDeadlockCycle(conflicts);
 //    System.out.println("Deadlock? " + deadlock);
-    if (deadlock) {
-      System.out.println("There is deadlock!");
+    if (deadLockCycle != null) {
+      System.out.println("There is deadlock");
+      Transaction youngest = null, transaction = null;
+      int initTime = Integer.MAX_VALUE;
+      
+      for (String transactionName: deadLockCycle) {
+        transaction = transactionMapping.get(transactionName);
+        if (transaction.initTime < initTime) {
+          youngest = transaction;
+          initTime = transaction.initTime;
+        }
+      }
+      
+      abort(youngest);
     }
   }
   
@@ -246,7 +258,7 @@ class TransactionManager {
     return result;
   }
   
-  boolean detectDeadlock(HashSet<Conflict> conflicts) {
+  HashSet<String> detectDeadlockCycle(HashSet<Conflict> conflicts) {
     HashSet<String> visitedAll = new HashSet<>();
     HashSet<String> waitings = new HashSet<>();
     HashMap<String, ArrayList<String>> map = new HashMap<>();
@@ -259,21 +271,23 @@ class TransactionManager {
       map.put(conflict.waiting, current);
     }
     
+    HashSet<String> deadLockCycle = new HashSet<>();
     for (String waiting: waitings) {
       if (visitedAll.contains(waiting)) {
         continue;
       }
-      if (dfs(waiting, new HashSet<>(), visitedAll, map)) {
-        return true;
+      if (dfs(waiting, new HashSet<>(), visitedAll, map, deadLockCycle)) {
+        return deadLockCycle;
       }
     }
     
-    return false;
+    return null;
   }
   
   private boolean dfs(String waiting, HashSet<String> visited, HashSet<String> visitedAll, 
-      HashMap<String, ArrayList<String>> map) {
+      HashMap<String, ArrayList<String>> map, HashSet<String> deadLockCycle) {
     if (visited.contains(waiting)) {
+      deadLockCycle.addAll(visited);
       return true;
     }
     visited.add(waiting);
@@ -285,7 +299,7 @@ class TransactionManager {
     ArrayList<String> waiteds = map.get(waiting);
     
     for (String waited: waiteds) {
-      if (!visited.contains(waited) && dfs(waited, visited, visitedAll, map)) {
+      if (!visited.contains(waited) && dfs(waited, visited, visitedAll, map, deadLockCycle)) {
         return true;
       }
     }
