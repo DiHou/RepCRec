@@ -35,6 +35,13 @@ class QueryParser {
   private void parse(String input, boolean incrementTime) {
     if (incrementTime) {
       time++;
+      for (Unfinished unfinished: manager.unfinished.values()) {
+        if (unfinished.isRead) {
+          manager.read(unfinished.transactionName, unfinished.key);
+        } else {
+          manager.write(unfinished.transactionName, unfinished.key, unfinished.value);
+        }
+      }
     }
     String query = input.replaceAll(" ", "");
     

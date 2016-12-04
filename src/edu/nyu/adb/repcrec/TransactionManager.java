@@ -13,6 +13,7 @@ import java.util.LinkedHashSet;
 class TransactionManager {
   HashMap<String, Transaction> transactionMapping;
   SimulatedSite[] sites;
+  HashMap<String, Unfinished> unfinished = new HashMap<>();
 
   void initialize() {
     transactionMapping = new HashMap<String, Transaction>();
@@ -104,6 +105,7 @@ class TransactionManager {
     
     //!!!! need to handle the case that every site that contains the item is down
     //add to the unfinished hashmap for processing.
+    unfinished.put(transactionName, new Unfinished(transactionName, true, key));
     
     // does not find a working site containing the variable, abort
 //    if (i == sites.length) {
@@ -212,6 +214,7 @@ class TransactionManager {
   }
 
   void abort(Transaction transaction) {
+    unfinished.remove(transaction.name);  // Remove unfinished query if there is any.
     end(transaction, false);
   }
 
