@@ -80,7 +80,7 @@ class SimulatedSite {
     
     // Set un-replicated item isReadyReady.
     for (ItemInfo itemInfo : database.values()) {
-      if (!manager.isReplicated(itemInfo.key)) {
+      if (!isReplicated(itemInfo.key)) {
         itemInfo.isReadReady = true;
       } else {
         itemInfo.isReadReady = false;
@@ -88,5 +88,11 @@ class SimulatedSite {
     }
     
     System.out.println("Site " + siteID + " recovered");
+  }
+  
+
+  boolean isReplicated(String name) {
+    int index = Integer.parseInt(name.substring(1, name.length()));
+    return index % 2 == 0 ? true : false;
   }
 }
