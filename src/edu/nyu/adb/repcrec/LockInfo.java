@@ -1,6 +1,11 @@
 package edu.nyu.adb.repcrec;
 
-
+/**
+ * This is the lock information stored in lockTable of each SimulatedSite.
+ * Package access level, not intended to expose for public use.
+ *  
+ * @author yanghui
+ */
 class LockInfo {
   Transaction transaction;
   ItemInfo itemInfo;

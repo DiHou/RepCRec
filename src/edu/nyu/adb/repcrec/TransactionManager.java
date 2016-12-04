@@ -5,6 +5,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
+/**
+ * Package access level, not intended to expose for public use.
+ *  
+ * @author yanghui
+ */
 class TransactionManager {
   HashMap<String, Transaction> transactionMapping;
   SimulatedSite[] sites;
@@ -68,7 +73,7 @@ class TransactionManager {
           
           itemInfo.lockList.add(lock);
           transaction.locksHolding.add(lock);
-          sites[i].addLock(lock);
+          sites[i].lockTable.add(lock);
           
           System.out.print("Read by " + transaction.name + ", ");
           print(itemInfo.key, itemInfo.value, i + 1);
@@ -80,7 +85,7 @@ class TransactionManager {
             
             itemInfo.lockList.add(lock);
             transaction.locksHolding.add(lock);
-            sites[i].addLock(lock);
+            sites[i].lockTable.add(lock);
             
             System.out.print("Read by " + transaction.name + ", ");
             print(itemInfo.key, itemInfo.getWriteLockInfo().value, itemInfo.getWriteLockInfo().site.siteID);
@@ -89,7 +94,7 @@ class TransactionManager {
             
             itemInfo.waitList.add(lock);
             transaction.locksHolding.add(lock);
-            sites[i].addLock(lock);
+            sites[i].lockTable.add(lock);
             sites[i].conflicts.add(new Conflict(transactionName, writeLock.transaction.name));
           }
           return;
@@ -138,7 +143,7 @@ class TransactionManager {
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           
           itemInfo.lockList.add(lock);
-          sites[i].addLock(lock);
+          sites[i].lockTable.add(lock);
           transaction.locksHolding.add(lock);
 //          shouldAbort = false;
         } else {
@@ -181,7 +186,7 @@ class TransactionManager {
           }
           
           transaction.locksHolding.add(lock);
-          sites[i].addLock(lock);
+          sites[i].lockTable.add(lock);
 //          shouldAbort = false;
         }
       }
@@ -223,7 +228,12 @@ class TransactionManager {
     }
     
     transaction.releaseLocks();
+    removeConflict(transaction);
     transactionMapping.remove(transaction.name);
+  }
+
+  void removeConflict(Transaction transaction) {
+    // need to add implementation
   }
 
   void deadLockCheckAndHandle() {

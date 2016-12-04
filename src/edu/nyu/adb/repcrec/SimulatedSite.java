@@ -5,6 +5,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
+/**
+ * Package access level, not intended to expose for public use.
+ *  
+ * @author yanghui
+ */
 class SimulatedSite {
   final int siteID;
   final TransactionManager manager;
@@ -49,10 +54,6 @@ class SimulatedSite {
       }
     }
     System.out.println("Site " + siteID + " recovered");
-  }
-
-  void addLock(LockInfo lock) {
-    lockTable.add(lock);
   }
 
   // print all items
