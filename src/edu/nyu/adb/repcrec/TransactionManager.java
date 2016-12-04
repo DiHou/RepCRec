@@ -298,7 +298,9 @@ class TransactionManager {
   // dump all items in each site
   void dump() {
     for (int i = 0; i < sites.length; i++) {
-      sites[i].dump();
+      if (!sites[i].isDown) {
+        sites[i].dump();
+      }
       System.out.println();
     }
   }
@@ -306,7 +308,9 @@ class TransactionManager {
   // dump a specific item in each site
   void dump(String key) {
     for (int i = 0; i < sites.length; i++) {
-      sites[i].dump(key);
+      if (!sites[i].isDown) {
+        sites[i].dump(key);
+      }
     }
   }
   
