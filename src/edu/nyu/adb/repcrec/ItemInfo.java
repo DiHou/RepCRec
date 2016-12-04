@@ -88,10 +88,10 @@ class ItemInfo {
 //  }
   
   /**
-   * whenever a lock on this variable is released, update the lock list and check if locks in the 
-   * wait list also should be moved to the active lock list
+   * Whenever a lock on this variable is released, update the lock list and check if locks in the 
+   * wait list also should be moved to the active lock list.
    */
-  void update() {
+  void updateItemLockStatus() {
     removeInvalidLockInLockList();
     removeInvalidLockInWaitList();
     
