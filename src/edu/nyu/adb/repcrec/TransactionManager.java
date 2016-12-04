@@ -231,21 +231,13 @@ class TransactionManager {
     }
     
     transaction.releaseLocks();
-    removeConflict(transaction.name);
+    updateConflicts(transaction.name);
     transactionMapping.remove(transaction.name);
   }
 
-  void removeConflict(String transactionName) {
-    HashSet<Conflict> conflicts = null;
+  void updateConflicts(String transactionName) {
     for (int i = 0; i < sites.length; i++) {
-      conflicts = new HashSet<>();
-      for (Conflict conflict: sites[i].conflicts) {
-        if (conflict.waiting.equals(transactionName) || conflict.waited.equals(transactionName)) {
-          continue;
-        }
-        conflicts.add(conflict);
-      }
-      sites[i].conflicts = conflicts;
+      sites[i].updateConflicts(transactionName);
     }
   }
 
