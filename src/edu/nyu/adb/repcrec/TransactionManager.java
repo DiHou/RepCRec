@@ -35,11 +35,6 @@ class TransactionManager {
     }
   }
 
-//  boolean isReplicated(String name) {
-//    int index = Integer.parseInt(name.substring(1, name.length()));
-//    return index % 2 == 0 ? true : false;
-//  }
-
   void begin(String name, int time, boolean isReadOnly) {
     transactionMapping.put(name, new Transaction(name, time, isReadOnly, this));
   }
