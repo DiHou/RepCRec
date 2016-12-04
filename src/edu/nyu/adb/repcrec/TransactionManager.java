@@ -103,8 +103,7 @@ class TransactionManager {
       }
     }
     
-    //!!!! need to handle the case that every site that contains the item is down
-    //add to the unfinished hashmap for processing.
+    // does not find a working site containing the variable, add to unfinished list
     unfinished.put(transactionName, new Unfinished(transactionName, true, key));
     
     // does not find a working site containing the variable, abort
@@ -135,11 +134,12 @@ class TransactionManager {
     }
     
 //    boolean shouldAbort = true;
-    
+    boolean foundAlive = false;
     for (int i = 0; i < sites.length; i++) {
       if (sites[i].isDown) {
         continue;
       } else if (sites[i].database.containsKey(key)) {
+        foundAlive = true;
         ItemInfo itemInfo = sites[i].database.get(key);
         if (!itemInfo.isReadOrWriteLocked()) {    // if the item does not have any lock
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
@@ -194,6 +194,9 @@ class TransactionManager {
       }
     }
     
+    if (!foundAlive) {
+      unfinished.put(transactionName, new Unfinished(transactionName, false, key, value));
+    }
 //    if (shouldAbort) {
 //      if (!isReplicated(key)) {
 //        for (int pos = 0; pos < sites.length; pos++) {
