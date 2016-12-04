@@ -171,14 +171,14 @@ class TransactionManager {
           if (lockOnlyOwnedBySelf) {
             itemInfo.lockList.add(lock);
           } else {
-            itemInfo.waitList.add(lock); 
+            itemInfo.waitList.add(lock);
+            for (int j = 0; j < lockListSize; j++) {
+              sites[i].conflicts.add(new Conflict(transactionName, lockList.get(j).transaction.name));
+            }
           }
           
           transaction.locksHolding.add(lock);
           sites[i].addLock(lock);
-          for (int j = 0; j < lockListSize; j++) {
-            sites[i].conflicts.add(new Conflict(transactionName, lockList.get(j).transaction.name));
-          }
 //          shouldAbort = false;
         }
       }
@@ -226,7 +226,7 @@ class TransactionManager {
   void deadLockCheckAndHandle() {
     HashSet<Conflict> conflicts = constructConflicts();
     boolean deadlock = detectDeadlock(conflicts);
-    System.out.println("Deadlock? " + deadlock);
+//    System.out.println("Deadlock? " + deadlock);
     if (deadlock) {
       System.out.println("There is deadlock!");
     }
@@ -239,15 +239,15 @@ class TransactionManager {
       result.addAll(sites[i].conflicts);
     }
     
-    for (Conflict conflict: result) {
-      System.out.println("Conflict: " + conflict.waiting + " -> " + conflict.waited);
-    }
+//    for (Conflict conflict: result) {
+//      System.out.println("Conflict: " + conflict.waiting + " -> " + conflict.waited);
+//    }
     
     return result;
   }
   
   boolean detectDeadlock(HashSet<Conflict> conflicts) {
-    HashSet<String> visited = new HashSet<>();
+    HashSet<String> visitedAll = new HashSet<>();
     HashSet<String> waitings = new HashSet<>();
     HashMap<String, ArrayList<String>> map = new HashMap<>();
     
@@ -260,10 +260,10 @@ class TransactionManager {
     }
     
     for (String waiting: waitings) {
-      if (visited.contains(waiting)) {
+      if (visitedAll.contains(waiting)) {
         continue;
       }
-      if (dfs(waiting, visited, map)) {
+      if (dfs(waiting, new HashSet<>(), visitedAll, map)) {
         return true;
       }
     }
@@ -271,12 +271,13 @@ class TransactionManager {
     return false;
   }
   
-  private boolean dfs(String waiting, HashSet<String> visited, 
+  private boolean dfs(String waiting, HashSet<String> visited, HashSet<String> visitedAll, 
       HashMap<String, ArrayList<String>> map) {
     if (visited.contains(waiting)) {
       return true;
     }
     visited.add(waiting);
+    visitedAll.add(waiting);
     
     if (!map.containsKey(waiting)) {
       return false;
@@ -284,7 +285,7 @@ class TransactionManager {
     ArrayList<String> waiteds = map.get(waiting);
     
     for (String waited: waiteds) {
-      if (dfs(waited, visited, map)) {
+      if (!visited.contains(waited) && dfs(waited, visited, visitedAll, map)) {
         return true;
       }
     }
