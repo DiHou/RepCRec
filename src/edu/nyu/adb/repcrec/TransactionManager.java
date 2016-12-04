@@ -76,8 +76,8 @@ class TransactionManager {
           transaction.locksHolding.add(lock);
           sites[i].lockTable.add(lock);
           
-          System.out.print("Read by " + transaction.name + ", ");
-          print(itemInfo.key, itemInfo.value, i + 1);
+//          System.out.print("Read by " + transaction.name + ", ");
+//          print(itemInfo.key, itemInfo.value, i + 1);
           return;
         } else if (itemInfo.isReadReady) {  // item is write locked
           LockInfo writeLock = itemInfo.getWriteLockInfo();
@@ -88,8 +88,8 @@ class TransactionManager {
             transaction.locksHolding.add(lock);
             sites[i].lockTable.add(lock);
             
-            System.out.print("Read by " + transaction.name + ", ");
-            print(itemInfo.key, itemInfo.getWriteLockInfo().value, itemInfo.getWriteLockInfo().site.siteID);
+//            System.out.print("Read by " + transaction.name + ", ");
+//            print(itemInfo.key, itemInfo.getWriteLockInfo().value, itemInfo.getWriteLockInfo().site.siteID);
           } else {
             LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
             
@@ -230,7 +230,7 @@ class TransactionManager {
     
     // Commit writes if the transaction is to commit.
     if (toCommit) {
-      transaction.commitWrites();
+      transaction.commitReadsAndWrites();
     }
     
     transaction.releaseLocks();

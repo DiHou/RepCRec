@@ -106,7 +106,9 @@ class ItemInfo {
         int i = 0;
         while (waitList.size() >= i + 1) {
           if (waitList.get(i).transaction.name.equals(currentLock.transaction.name)) {
-            lockList.add(waitList.remove(i));
+            LockInfo readLockInfo = waitList.remove(i);
+            readLockInfo.value = currentLock.value;
+            lockList.add(readLockInfo);
           } else {
             i++;
           }
@@ -114,12 +116,16 @@ class ItemInfo {
       } else {
         int i = 0;
         while (waitList.size() >= i + 1) {
-          LockInfo lockInfo = waitList.get(i);
-          if (lockInfo.lockType == LockType.READ) {
-            lockList.add(lockInfo);
-            waitList.remove(i);
-            System.out.print("Read by " + lockInfo.transaction.name + ", ");
-            print(lockInfo.itemInfo.key, lockInfo.itemInfo.value, lockInfo.site.siteID);
+//          LockInfo lockInfo = waitList.get(i);
+          if (waitList.get(i).lockType == LockType.READ) {
+//            lockList.add(waitList.remove(i));
+            
+            LockInfo readLockInfo = waitList.remove(i);
+            readLockInfo.value = readLockInfo.site.database.get(readLockInfo.itemInfo.key).value;
+            lockList.add(readLockInfo);
+//            waitList.remove(i);
+//            System.out.print("Read by " + lockInfo.transaction.name + ", ");
+//            print(lockInfo.itemInfo.key, lockInfo.itemInfo.value, lockInfo.site.siteID);
           } else {
             i++;
           }
