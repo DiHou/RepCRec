@@ -44,7 +44,7 @@ class Transaction {
     }
   }
   
-  void commitWrites() {  // Defer write commit until when a transaction commits.
+  void commitWrites() {  // Defer write commits until now, when the transaction commits.
     for (LockInfo lockInfo : locksHolding) {
       if (lockInfo.isValid && lockInfo.lockType == LockType.WRITE) {
         lockInfo.itemInfo.value = lockInfo.value;
@@ -53,7 +53,7 @@ class Transaction {
     }
   }
 
-  void releaseLocks() {
+  void releaseLocks() {  // Release locks and update item lock status.
     for (LockInfo lock : locksHolding) {
       lock.isValid = false;
       lock.itemInfo.updateItemLockStatus();
