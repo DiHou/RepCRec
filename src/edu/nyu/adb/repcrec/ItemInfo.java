@@ -30,17 +30,20 @@ class ItemInfo {
       if (lock.lockType == LockType.WRITE) {
         return true;
       }
-    } 
+    }
+    
     return false;
   }
 
   LockInfo getWriteLockInfo() {
     validateLockList();
+    
     for (LockInfo lockInfo: lockList) {
       if (lockInfo.lockType == LockType.WRITE) {
         return lockInfo;
       }
-    } 
+    }
+    
     return null;
   }
 
@@ -49,17 +52,22 @@ class ItemInfo {
     return lockList.size() != 0;
   }
 
+  ArrayList<LockInfo> getLockList() {
+    validateLockList();
+    return lockList;
+  }
+
   // Remove invalid locks of which transaction is aborted or site is down on locklist.
   void validateLockList() {
-    removeInvalidLock(lockList);
+    validateLock(lockList);
   }
 
   // Remove invalid locks of which transaction is aborted or site is down on waitlist.
   void validateWaitList() {
-    removeInvalidLock(waitList);
+    validateLock(waitList);
   }
 
-  private void removeInvalidLock(ArrayList<LockInfo> list) {
+  private void validateLock(ArrayList<LockInfo> list) {
     for (int i = 0; i < list.size();) {
       LockInfo lock = list.get(i);
       if (!lock.isValid) {
@@ -69,23 +77,6 @@ class ItemInfo {
       }
     }
   }
-
-  ArrayList<LockInfo> getLockList() {
-    validateLockList();
-    return lockList;
-  }
-
-//  /**
-//   * check if a transaction can wait
-//   * 
-//   * for efficiency, there is no need to add a lock to the wait list if there exists an older 
-//   * transaction, so the time stamps of the transactions in the wait list should be in strict 
-//   * decreasing order
-//   */
-//  boolean canWait(Transaction t) {
-//    removeInvalidLockInWaitList();
-//    return waitList.isEmpty() || waitList.get(waitList.size() - 1).transaction.initTime > t.initTime;
-//  }
 
   /**
    * When a lock on the item is released, update the lock list (grant lock to the first transaction 
@@ -116,25 +107,15 @@ class ItemInfo {
       } else {
         int i = 0;
         while (waitList.size() >= i + 1) {
-//          LockInfo lockInfo = waitList.get(i);
           if (waitList.get(i).lockType == LockType.READ) {
-//            lockList.add(waitList.remove(i));
-            
             LockInfo readLockInfo = waitList.remove(i);
             readLockInfo.value = readLockInfo.site.database.get(readLockInfo.itemInfo.key).value;
             lockList.add(readLockInfo);
-//            waitList.remove(i);
-//            System.out.print("Read by " + lockInfo.transaction.name + ", ");
-//            print(lockInfo.itemInfo.key, lockInfo.itemInfo.value, lockInfo.site.siteID);
           } else {
             i++;
           }
         }
       }
     }
-  }
-  
-  void print(String key, int value, int siteNumber) {
-    System.out.println(key + ": " + value + " at site " + siteNumber);
   }
 }

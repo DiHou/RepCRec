@@ -35,6 +35,8 @@ class QueryParser {
   private void parse(String input, boolean incrementTime) {
     if (incrementTime) {
       time++;
+      
+      // Try unfinished queries first, as a site may recover.
       for (Unfinished unfinished: manager.unfinished.values()) {
         if (unfinished.isRead) {
           manager.read(unfinished.transactionName, unfinished.key);

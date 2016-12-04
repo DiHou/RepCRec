@@ -44,15 +44,12 @@ class Transaction {
     }
   }
   
-  void commitReadsAndWrites() {  // Defer write commits until now, when the transaction commits.
+  void commitReadsAndWrites() {  // Defer all read and write until now, when the transaction commits.
     for (LockInfo lockInfo : locksHolding) {
       if (lockInfo.isValid && lockInfo.lockType == LockType.WRITE) {
         lockInfo.itemInfo.value = lockInfo.value;
         lockInfo.itemInfo.isReadReady = true;
-      } else if (lockInfo.lockType == LockType.READ) {   //lockInfo.isValid && 
-//        System.out.println("I am in commit read");
-//        System.out.println(lockInfo.value);
-//lockInfo.itemInfo.key + ": " + lockInfo.value + " at site " + lockInfo.site.siteID
+      } else if (lockInfo.isValid && lockInfo.lockType == LockType.READ) {
         System.out.print("Read by " + lockInfo.transaction.name + ", ");
         print(lockInfo.itemInfo.key, lockInfo.itemInfo.value, lockInfo.site.siteID);
       }
