@@ -13,6 +13,7 @@ import java.util.LinkedHashSet;
 class TransactionManager {
   HashMap<String, Transaction> transactionMapping;
   SimulatedSite[] sites;
+  HashMap<String, Unfinished> unfinished = new HashMap<>();
 
   void initialize() {
     transactionMapping = new HashMap<String, Transaction>();
@@ -102,8 +103,8 @@ class TransactionManager {
       }
     }
     
-    //!!!! need to handle the case that every site that contains the item is down
-    //add to the unfinished hashmap for processing.
+    // does not find a working site containing the variable, add to unfinished list
+    unfinished.put(transactionName, new Unfinished(transactionName, true, key));
     
     // does not find a working site containing the variable, abort
 //    if (i == sites.length) {
@@ -133,11 +134,12 @@ class TransactionManager {
     }
     
 //    boolean shouldAbort = true;
-    
+    boolean foundAlive = false;
     for (int i = 0; i < sites.length; i++) {
       if (sites[i].isDown) {
         continue;
       } else if (sites[i].database.containsKey(key)) {
+        foundAlive = true;
         ItemInfo itemInfo = sites[i].database.get(key);
         if (!itemInfo.isReadOrWriteLocked()) {    // if the item does not have any lock
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
@@ -192,6 +194,9 @@ class TransactionManager {
       }
     }
     
+    if (!foundAlive) {
+      unfinished.put(transactionName, new Unfinished(transactionName, false, key, value));
+    }
 //    if (shouldAbort) {
 //      if (!isReplicated(key)) {
 //        for (int pos = 0; pos < sites.length; pos++) {
@@ -212,6 +217,7 @@ class TransactionManager {
   }
 
   void abort(Transaction transaction) {
+    unfinished.remove(transaction.name);  // Remove unfinished query if there is any.
     end(transaction, false);
   }
 
@@ -228,21 +234,13 @@ class TransactionManager {
     }
     
     transaction.releaseLocks();
-    removeConflict(transaction.name);
+    updateConflicts(transaction.name);
     transactionMapping.remove(transaction.name);
   }
 
-  void removeConflict(String transactionName) {
-    HashSet<Conflict> conflicts = null;
+  void updateConflicts(String transactionName) {
     for (int i = 0; i < sites.length; i++) {
-      conflicts = new HashSet<>();
-      for (Conflict conflict: sites[i].conflicts) {
-        if (conflict.waiting.equals(transactionName) || conflict.waited.equals(transactionName)) {
-          continue;
-        }
-        conflicts.add(conflict);
-      }
-      sites[i].conflicts = conflicts;
+      sites[i].updateConflicts(transactionName);
     }
   }
 

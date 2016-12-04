@@ -24,7 +24,7 @@ class ItemInfo {
   }
   
   boolean isWriteLocked() {
-    removeInvalidLockInLockList();
+    validateLockList();
     
     for (LockInfo lock: lockList) {
       if (lock.lockType == LockType.WRITE) {
@@ -35,7 +35,7 @@ class ItemInfo {
   }
   
   LockInfo getWriteLockInfo() {
-    removeInvalidLockInLockList();
+    validateLockList();
     for (LockInfo lockInfo: lockList) {
       if (lockInfo.lockType == LockType.WRITE) {
         return lockInfo;
@@ -45,17 +45,17 @@ class ItemInfo {
   }
 
   boolean isReadOrWriteLocked() {
-    removeInvalidLockInLockList();
+    validateLockList();
     return lockList.size() != 0;
   }
 
   // Remove invalid locks of which transaction is aborted or site is down on locklist.
-  void removeInvalidLockInLockList() {
+  void validateLockList() {
     removeInvalidLock(lockList);
   }
 
   // Remove invalid locks of which transaction is aborted or site is down on waitlist.
-  void removeInvalidLockInWaitList() {
+  void validateWaitList() {
     removeInvalidLock(waitList);
   }
 
@@ -71,7 +71,7 @@ class ItemInfo {
   }
 
   ArrayList<LockInfo> getLockList() {
-    removeInvalidLockInLockList();
+    validateLockList();
     return lockList;
   }
 
@@ -88,30 +88,40 @@ class ItemInfo {
 //  }
   
   /**
-   * whenever a lock on this variable is released, update the lock list and check if locks in the 
-   * wait list also should be moved to the active lock list
+   * Whenever a lock on this variable is released, update the lock list and check if locks in the 
+   * wait list also should be moved to the active lock list.
    */
-  void update() {
-    removeInvalidLockInLockList();
-    removeInvalidLockInWaitList();
+  void updateItemLockStatus() {
+    validateLockList();
+    validateWaitList();
     
     if (lockList.size() == 0 && waitList.size() > 0) {
       if (waitList.get(0).lockType == LockType.WRITE) {
         Transaction t = waitList.get(0).transaction;
         lockList.add(waitList.get(0));
         waitList.remove(0);
-        while (waitList.size() > 0 && waitList.get(0).transaction.name.equals(t.name)) {
-          lockList.add(waitList.get(0));
-          waitList.remove(0);
+        int i = 0;
+        while (waitList.size() >= i + 1) {
+          if (waitList.get(i).transaction.name.equals(t.name)) {
+            lockList.add(waitList.get(i));
+            waitList.remove(i);
+          } else {
+            i++;
+          }
         }
       } else {
-        while (waitList.size() > 0 && waitList.get(0).lockType == LockType.READ) {
-          LockInfo lock = waitList.get(0);
-          lockList.add(lock);
-          waitList.remove(0);
-          
-          System.out.print("Read by " + lock.transaction.name + ", ");
-          print(lock.itemInfo.key, lock.itemInfo.value, lock.site.siteID);
+        int i = 0;
+        while (waitList.size() >= i + 1) {
+          if (waitList.get(i).lockType == LockType.READ) {
+            LockInfo lock = waitList.get(i);
+            lockList.add(lock);
+            waitList.remove(i);
+            
+            System.out.print("Read by " + lock.transaction.name + ", ");
+            print(lock.itemInfo.key, lock.itemInfo.value, lock.site.siteID);
+          } else {
+            i++;
+          }
         }
       }
     }

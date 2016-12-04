@@ -56,7 +56,7 @@ class Transaction {
   void releaseLocks() {
     for (LockInfo lock : locksHolding) {
       lock.isValid = false;
-      lock.itemInfo.update();
+      lock.itemInfo.updateItemLockStatus();
     }
   }
 }
