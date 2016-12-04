@@ -3,6 +3,11 @@ package edu.nyu.adb.repcrec;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * Package access level, not intended to expose for public use.
+ *  
+ * @author yanghui
+ */
 class Transaction {
   final String name;
   final int initTime;
@@ -39,14 +44,11 @@ class Transaction {
     }
   }
   
-  /**
-   * Actually commit write operations when a transaction commits.
-   */
-  void commitWrites() {
+  void commitWrites() {  // Defer write commit until when a transaction commits.
     for (LockInfo lockInfo : locksHolding) {
       if (lockInfo.isValid && lockInfo.lockType == LockType.WRITE) {
         lockInfo.itemInfo.value = lockInfo.value;
-        lockInfo.itemInfo.isReadyForRead = true;
+        lockInfo.itemInfo.isReadReady = true;
       }
     }
   }

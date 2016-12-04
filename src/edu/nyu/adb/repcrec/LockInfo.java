@@ -1,5 +1,11 @@
 package edu.nyu.adb.repcrec;
 
+/**
+ * This is the lock information stored in lockTable of each SimulatedSite.
+ * Package access level, not intended to expose for public use.
+ *  
+ * @author yanghui
+ */
 class LockInfo {
   Transaction transaction;
   ItemInfo itemInfo;
@@ -8,12 +14,6 @@ class LockInfo {
   int value;        // the value to write for the write lock
   boolean isValid;  // When transaction is finished or site is down, the lock becomes invalid.
   
-  /**
-   * when a lock is created, its pointer will be stored in three objects: the
-   * variable, the site and the transaction. In this way, we can much more
-   * easily handle the cases when a site is failed or a transaction aborts by
-   * simply marking the lock as inactive
-   */
   LockInfo(Transaction transaction, ItemInfo itemInfo, SimulatedSite site, LockType lockType, 
       int value, boolean isValid) {
     this.transaction = transaction;

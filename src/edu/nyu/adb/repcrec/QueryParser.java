@@ -4,6 +4,11 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
+/**
+ * Package access level, not intended to expose for public use.
+ *  
+ * @author yanghui
+ */
 class QueryParser {
   int time = 0;
   final TransactionManager manager;
@@ -33,6 +38,7 @@ class QueryParser {
     }
     String query = input.replaceAll(" ", "");
     
+    // Deadlock detection is needed only after read/write because other queries won't cause deadlock.
     if (query.contains(";")) {
       String[] queries = query.split(";");
       for (int i = 0; i < queries.length; i++) {

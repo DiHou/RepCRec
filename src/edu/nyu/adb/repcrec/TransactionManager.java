@@ -5,6 +5,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 
+/**
+ * Package access level, not intended to expose for public use.
+ *  
+ * @author yanghui
+ */
 class TransactionManager {
   HashMap<String, Transaction> transactionMapping;
   SimulatedSite[] sites;
@@ -63,24 +68,24 @@ class TransactionManager {
       } else if (sites[i].database.containsKey(key)) {
         ItemInfo itemInfo = sites[i].database.get(key);
         
-        if (itemInfo.isReadyForRead && !itemInfo.isWriteLocked()) {
+        if (itemInfo.isReadReady && !itemInfo.isWriteLocked()) {
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
           
           itemInfo.lockList.add(lock);
           transaction.locksHolding.add(lock);
-          sites[i].addLock(lock);
+          sites[i].lockTable.add(lock);
           
           System.out.print("Read by " + transaction.name + ", ");
           print(itemInfo.key, itemInfo.value, i + 1);
           return;
-        } else if (itemInfo.isReadyForRead) {  // item is write locked
+        } else if (itemInfo.isReadReady) {  // item is write locked
           LockInfo writeLock = itemInfo.getWriteLockInfo();
           if (writeLock.transaction.name.equals(transaction.name)) {  // locked by self
             LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.READ, 0, true);
             
             itemInfo.lockList.add(lock);
             transaction.locksHolding.add(lock);
-            sites[i].addLock(lock);
+            sites[i].lockTable.add(lock);
             
             System.out.print("Read by " + transaction.name + ", ");
             print(itemInfo.key, itemInfo.getWriteLockInfo().value, itemInfo.getWriteLockInfo().site.siteID);
@@ -89,7 +94,7 @@ class TransactionManager {
             
             itemInfo.waitList.add(lock);
             transaction.locksHolding.add(lock);
-            sites[i].addLock(lock);
+            sites[i].lockTable.add(lock);
             sites[i].conflicts.add(new Conflict(transactionName, writeLock.transaction.name));
           }
           return;
@@ -138,7 +143,7 @@ class TransactionManager {
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           
           itemInfo.lockList.add(lock);
-          sites[i].addLock(lock);
+          sites[i].lockTable.add(lock);
           transaction.locksHolding.add(lock);
 //          shouldAbort = false;
         } else {
@@ -181,7 +186,7 @@ class TransactionManager {
           }
           
           transaction.locksHolding.add(lock);
-          sites[i].addLock(lock);
+          sites[i].lockTable.add(lock);
 //          shouldAbort = false;
         }
       }
@@ -223,7 +228,22 @@ class TransactionManager {
     }
     
     transaction.releaseLocks();
+    removeConflict(transaction.name);
     transactionMapping.remove(transaction.name);
+  }
+
+  void removeConflict(String transactionName) {
+    HashSet<Conflict> conflicts = null;
+    for (int i = 0; i < sites.length; i++) {
+      conflicts = new HashSet<>();
+      for (Conflict conflict: sites[i].conflicts) {
+        if (conflict.waiting.equals(transactionName) || conflict.waited.equals(transactionName)) {
+          continue;
+        }
+        conflicts.add(conflict);
+      }
+      sites[i].conflicts = conflicts;
+    }
   }
 
   void deadLockCheckAndHandle() {
