@@ -228,12 +228,22 @@ class TransactionManager {
     }
     
     transaction.releaseLocks();
-    removeConflict(transaction);
+    removeConflict(transaction.name);
     transactionMapping.remove(transaction.name);
   }
 
-  void removeConflict(Transaction transaction) {
-    // need to add implementation
+  void removeConflict(String transactionName) {
+    HashSet<Conflict> conflicts = null;
+    for (int i = 0; i < sites.length; i++) {
+      conflicts = new HashSet<>();
+      for (Conflict conflict: sites[i].conflicts) {
+        if (conflict.waiting.equals(transactionName) || conflict.waited.equals(transactionName)) {
+          continue;
+        }
+        conflicts.add(conflict);
+      }
+      sites[i].conflicts = conflicts;
+    }
   }
 
   void deadLockCheckAndHandle() {
