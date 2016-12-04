@@ -46,7 +46,7 @@ class Transaction {
     for (LockInfo lockInfo : locksHolding) {
       if (lockInfo.isValid && lockInfo.lockType == LockType.WRITE) {
         lockInfo.itemInfo.value = lockInfo.value;
-        lockInfo.itemInfo.isReadyForRead = true;
+        lockInfo.itemInfo.isReadReady = true;
       }
     }
   }

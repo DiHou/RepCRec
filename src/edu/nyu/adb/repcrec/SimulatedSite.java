@@ -43,9 +43,9 @@ class SimulatedSite {
     isDown = false;
     for (ItemInfo itemInfo : database.values()) {
       if (!manager.isReplicated(itemInfo.key)) {
-        itemInfo.isReadyForRead = true;
+        itemInfo.isReadReady = true;
       } else {
-        itemInfo.isReadyForRead = false;
+        itemInfo.isReadReady = false;
       }
     }
     System.out.println("Site " + siteID + " recovered");
@@ -55,21 +55,20 @@ class SimulatedSite {
     lockTable.add(lock);
   }
 
-  /**
-   * print the all variables and values in the site
-   */
+  // print all items
   void dump() {
     for (int i = 1; i <= 20; i++) {
       String item = "x" + i;
       if (database.containsKey(item)) {
         ItemInfo itemInfo = database.get(item);
-        if (itemInfo.isReadyForRead) {
+        if (itemInfo.isReadReady) {
           manager.print(itemInfo.key, itemInfo.value, siteID);
         }
       }
     }
   }
-
+  
+  // print a specific item
   void dump(String key) {
     if (database.containsKey(key)) {
       ItemInfo itemInfo = database.get(key);
