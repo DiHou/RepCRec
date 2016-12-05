@@ -1,9 +1,9 @@
 package edu.nyu.adb.repcrec;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Scanner;
 
 /**
  * Package access level, not intended to expose for public use.
@@ -21,8 +21,9 @@ class QueryParser {
   void startParsing(String file) {
     String readLine = null;
     
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-      while ((readLine = reader.readLine()) != null) {
+    try (Scanner scanner = new Scanner(new File(file))) {
+      while (scanner.hasNextLine()) {
+        readLine = scanner.nextLine();
         if (!readLine.startsWith("//")) {  // Skip comments.
           parse(readLine, true);
         }
