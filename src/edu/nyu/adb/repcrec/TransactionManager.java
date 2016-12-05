@@ -133,7 +133,8 @@ class TransactionManager {
             itemInfo.waitList.add(lock);
             for (int j = 0; j < lockListSize; j++) {
               if (!transactionName.equals(lockList.get(j).transaction.name)) {
-                sites[i].conflicts.add(new Conflict(transactionName, lockList.get(j).transaction.name));
+                sites[i].conflicts.add(
+                    new Conflict(transactionName, lockList.get(j).transaction.name));
               }
             }
           }
