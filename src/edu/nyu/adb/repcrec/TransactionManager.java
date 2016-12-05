@@ -160,11 +160,11 @@ class TransactionManager {
     
     // Commit writes if the transaction is to commit.
     if (toCommit) {
-      System.out.printf("%s starts committing...\n", transaction.name);
+      System.out.printf("* %s starts committing...\n", transaction.name);
       transaction.commitReadsAndWrites();
     }
     
-    System.out.printf("%s is %s\n\n", transaction.name, (toCommit ? "committed" : "aborted"));
+    System.out.printf("%s%s is %s.\n\n", (toCommit ? "* " : ""), transaction.name, (toCommit ? "committed" : "aborted"));
     
     transaction.releaseLocks();
     updateConflicts(transaction.name);
