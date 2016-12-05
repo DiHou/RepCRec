@@ -47,7 +47,8 @@ class TransactionManager {
     
     if (transaction.isReadOnly) {
       if (transaction.dbSnapshot.containsKey(key)) {
-        System.out.printf("%s(RO)\t%s: %d\n", transaction.name, key, transaction.dbSnapshot.get(key)[0]);
+        System.out.printf("%s(RO)\t%s: %d\n", transaction.name, key, 
+            transaction.dbSnapshot.get(key)[0]);
       } else {
         abort(transaction);
       }
@@ -150,7 +151,6 @@ class TransactionManager {
   }
 
   void abort(Transaction transaction) {
-    unfinished.remove(transaction.name);  // Remove unfinished query if there is any.
     end(transaction, false);
   }
 
@@ -158,6 +158,7 @@ class TransactionManager {
     if (transaction == null) {
       return;
     }
+    unfinished.remove(transaction.name);  // Remove unfinished query if there is any.
     
     // Commit writes if the transaction is to commit.
     if (toCommit) {
@@ -204,7 +205,7 @@ class TransactionManager {
     }
   }
   
-  HashSet<Conflict> constructConflicts() {
+  private HashSet<Conflict> constructConflicts() {
     HashSet<Conflict> result = new HashSet<>();
     
     for (int i = 0; i < sites.length; i++) {
@@ -218,7 +219,7 @@ class TransactionManager {
     return result;
   }
   
-  HashSet<String> detectDeadlockCycle(HashSet<Conflict> conflicts) {
+  private HashSet<String> detectDeadlockCycle(HashSet<Conflict> conflicts) {
     HashSet<String> visitedAll = new HashSet<>();
     HashSet<String> waitings = new HashSet<>();
     HashMap<String, ArrayList<String>> map = new HashMap<>();

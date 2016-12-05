@@ -1,5 +1,10 @@
 package edu.nyu.adb.repcrec;
 
+/**
+ * Package access level, not intended to expose for public use.
+ *  
+ * @author yanghui
+ */
 class Unfinished {
   
   String transactionName;

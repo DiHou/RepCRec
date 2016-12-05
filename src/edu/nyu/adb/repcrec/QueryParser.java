@@ -22,7 +22,7 @@ class QueryParser {
     
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
       while ((readLine = reader.readLine()) != null) {
-        if (readLine.startsWith("//")) {
+        if (readLine.startsWith("//")) {  // Skip comments.
           continue;
         }
         parse(readLine, true);

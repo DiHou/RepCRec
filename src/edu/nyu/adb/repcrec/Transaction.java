@@ -27,7 +27,7 @@ class Transaction {
       createDatabaseSnapshot();
     }
   }
-  
+
   private void createDatabaseSnapshot() {
     this.dbSnapshot = new HashMap<>();
     
@@ -43,8 +43,9 @@ class Transaction {
       }
     }
   }
-  
-  void commitReadsAndWrites() {  // Defer all read and write until now, when the transaction commits.
+
+  // Defer all read and write until now, when the transaction commits.
+  void commitReadsAndWrites() {
     for (LockInfo lockInfo : locksHolding) {
       if (lockInfo.isValid && lockInfo.lockType == LockType.WRITE) {
         lockInfo.itemInfo.value = lockInfo.value;
@@ -56,14 +57,11 @@ class Transaction {
     }
   }
 
-  void releaseLocks() {  // Release locks and update item lock status.
+  // Release locks and update item lock status.
+  void releaseLocks() {
     for (LockInfo lock : locksHolding) {
       lock.isValid = false;
       lock.itemInfo.updateItemLockStatus();
     }
-  }
-  
-  void print(String key, int value, int siteNumber) {
-    System.out.println(key + ": " + value + " at site " + siteNumber);
   }
 }
