@@ -47,9 +47,7 @@ class TransactionManager {
     
     if (transaction.isReadOnly) {
       if (transaction.dbSnapshot.containsKey(key)) {
-        System.out.print("Read by " + transaction.name + ", ");
-        int[] valueInfo = transaction.dbSnapshot.get(key);
-        print(key, valueInfo[0], valueInfo[1]);
+        System.out.printf("%s(RO)\t%s: %d\n", transaction.name, key, transaction.dbSnapshot.get(key)[0]);
       } else {
         abort(transaction);
       }
@@ -159,15 +157,14 @@ class TransactionManager {
       return;
     }
     
-//    System.out.println(transaction.name + "starts committing...");
-    System.out.println(transaction.name + (toCommit ? " committed" : " aborted"));
     
     // Commit writes if the transaction is to commit.
     if (toCommit) {
+      System.out.printf("%s starts committing...\n", transaction.name);
       transaction.commitReadsAndWrites();
     }
     
-//    System.out.println(transaction.name + " is "+ (toCommit ? "committed" : "aborted"));
+    System.out.printf("%s is %s\n\n", transaction.name, (toCommit ? "committed" : "aborted"));
     
     transaction.releaseLocks();
     updateConflicts(transaction.name);
@@ -296,21 +293,24 @@ class TransactionManager {
       if (!sites[i].isDown) {
         sites[i].dump();
       }
-      System.out.println();
     }
   }
 
   // dump a specific item in each site
   void dump(String key) {
+    System.out.printf("dumping item %s...\n", key);
+    
     for (int i = 0; i < sites.length; i++) {
       if (!sites[i].isDown) {
         sites[i].dump(key);
       }
     }
+    
+    System.out.println();
   }
   
 
-  void print(String item, int value, int siteNumber) {
-    System.out.println(item + ": " + value + " at site " + siteNumber);
-  }
+//  void print(String item, int value, int siteNumber) {
+//    System.out.println(item + ": " + value + " at site " + siteNumber);
+//  }
 }

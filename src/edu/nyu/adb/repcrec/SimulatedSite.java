@@ -41,30 +41,36 @@ class SimulatedSite {
 
   // print all items
   void dump() {
+    System.out.printf("dumping site %d...\n", siteID);
+    
     for (int i = 1; i <= 20; i++) {
       String item = "x" + i;
       
       if (database.containsKey(item)) {
         ItemInfo itemInfo = database.get(item);
         if (itemInfo.isReadReady) {
-          manager.print(itemInfo.key, itemInfo.value, siteID);
+          System.out.printf("- %s\n", itemInfo.toString());
         }
       }
     }
+    
+    System.out.println();
   }
   
   // print a specific item
   void dump(String key) {
     if (database.containsKey(key)) {
       ItemInfo itemInfo = database.get(key);
-      manager.print(itemInfo.key, itemInfo.value, siteID);
+      if (itemInfo.isReadReady) {
+        System.out.printf("- %s, site: %d\n", itemInfo.toString(), siteID);
+      }
     }
   }
   
   // Mark all the locks invalid, clear lockTable and conflict when a site fails.
   void fail() {
     isDown = true;
-    System.out.println("Site " + siteID + " failed");
+    System.out.printf("Site %d failed.\n", siteID);
     
     for (LockInfo lock : lockTable) {
       lock.isValid = false;
@@ -87,7 +93,7 @@ class SimulatedSite {
       }
     }
     
-    System.out.println("Site " + siteID + " recovered");
+    System.out.printf("Site %d is recovered.\n", siteID);
   }
   
 

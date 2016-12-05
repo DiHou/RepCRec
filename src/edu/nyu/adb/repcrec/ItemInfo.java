@@ -118,4 +118,9 @@ class ItemInfo {
       }
     }
   }
+  
+  @Override
+  public String toString() {
+    return key + ": " + value;
+  }
 }
