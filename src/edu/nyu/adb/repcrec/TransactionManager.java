@@ -70,8 +70,8 @@ class TransactionManager {
           transaction.locksHolding.add(lock);
           sites[i].lockTable.add(lock);
           
-          if (itemInfo.isWriteLocked()) {
-            LockInfo writeLock = itemInfo.getWriteLockInfo();
+          LockInfo writeLock = itemInfo.getWriteLockInfo();
+          if (writeLock != null) {  // the item is write-locked
             if (writeLock.transaction.name.equals(transaction.name)) {  // it is locked by self
               itemInfo.lockers.add(lock);
             } else {
@@ -107,15 +107,14 @@ class TransactionManager {
         foundAlive = true;
         ItemInfo itemInfo = sites[i].database.get(key);
         
-        if (!itemInfo.isReadOrWriteLocked()) {    // if the item does not have any lock
+        ArrayList<LockInfo> lockList = itemInfo.getLockers();
+        if (lockList.size() == 0) {    // if the item does not have any lock
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           
           itemInfo.lockers.add(lock);
           sites[i].lockTable.add(lock);
           transaction.locksHolding.add(lock);
         } else {
-          ArrayList<LockInfo> lockList = itemInfo.getLockers();
-          
           // Check whether only itself owns the lock.
           boolean lockOnlyOwnedBySelf = true;
           int lockListSize = lockList.size();

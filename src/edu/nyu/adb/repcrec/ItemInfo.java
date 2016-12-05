@@ -23,18 +23,6 @@ class ItemInfo {
     this.waitList = new ArrayList<LockInfo>();
   }
 
-  boolean isWriteLocked() {
-    validateLockers();
-    
-    for (LockInfo lock: lockers) {
-      if (lock.lockType == LockType.WRITE) {
-        return true;
-      }
-    }
-    
-    return false;
-  }
-
   LockInfo getWriteLockInfo() {
     validateLockers();
     
@@ -45,11 +33,6 @@ class ItemInfo {
     }
     
     return null;
-  }
-
-  boolean isReadOrWriteLocked() {
-    validateLockers();
-    return lockers.size() != 0;
   }
 
   ArrayList<LockInfo> getLockers() {
