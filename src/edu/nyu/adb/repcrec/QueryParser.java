@@ -7,7 +7,7 @@ import java.io.IOException;
 /**
  * Package access level, not intended to expose for public use.
  *  
- * @author yanghui
+ * @author di
  */
 class QueryParser {
   int time = 0;

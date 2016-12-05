@@ -6,7 +6,7 @@ import java.util.HashMap;
 /**
  * Package access level, not intended to expose for public use.
  *  
- * @author yanghui
+ * @author di
  */
 class Transaction {
   final String name;

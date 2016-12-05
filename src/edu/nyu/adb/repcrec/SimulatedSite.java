@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Package access level, not intended to expose for public use.
  *  
- * @author yanghui
+ * @author di
  */
 class SimulatedSite {
   final int siteID;
@@ -56,7 +56,7 @@ class SimulatedSite {
     
     System.out.println();
   }
-  
+
   // print a specific item
   void dump(String key) {
     if (database.containsKey(key)) {
