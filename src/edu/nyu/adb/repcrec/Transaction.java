@@ -15,7 +15,7 @@ class Transaction {
   TransactionManager manager;
   ArrayList<LockInfo> locksHolding;
   HashMap<String, int[]> dbSnapshot;
-  ArrayList<LockInfo> readsOfRO;
+  ArrayList<KeyValueRO> readsOfRO;
 
   Transaction(String name, int initTime, boolean readOnly, TransactionManager manager) {
     this.name = name;
@@ -56,6 +56,13 @@ class Transaction {
         System.out.printf("*   %s: %d, site: %d\n", lockInfo.itemInfo.key, lockInfo.itemInfo.value, 
             lockInfo.site.siteID);
       }
+    }
+  }
+
+  // Commit reads of read-only transaction
+  void commitReadsAndWritesRO() {
+    for (KeyValueRO keyValue: readsOfRO) {
+      System.out.println(keyValue);
     }
   }
 

@@ -47,8 +47,10 @@ class TransactionManager {
     
     if (transaction.isReadOnly) {
       if (transaction.dbSnapshot.containsKey(key)) {
-        System.out.printf("%s(RO)\t%s: %d\n", transaction.name, key, 
-            transaction.dbSnapshot.get(key)[0]);
+//        System.out.printf("%s(RO)\t%s: %d\n", transaction.name, key, 
+//            transaction.dbSnapshot.get(key)[0]);
+        int[] value = transaction.dbSnapshot.get(key);
+        transaction.readsOfRO.add(new KeyValueRO(key, value[0], value[1]));
       } else {
         abort(transaction);
       }
@@ -159,12 +161,24 @@ class TransactionManager {
     }
     unfinished.remove(transaction.name);  // Remove unfinished query if there is any.
     
-    // Commit writes if the transaction is to commit.
+    // Commit or abort for read-only transaction.
+    if (transaction.isReadOnly) {
+      if (toCommit) {
+        System.out.printf("* %s(RO) starts committing...\n", transaction.name);
+        transaction.commitReadsAndWritesRO();
+      }
+      transaction.readsOfRO.clear();
+      transactionMapping.remove(transaction.name);
+      System.out.printf("%s%s(RO) is %s.\n\n", (toCommit ? "* " : ""), transaction.name, 
+          (toCommit ? "committed" : "aborted"));
+      return;
+    }
+    
+    // Commit or abort for read-write transaction.
     if (toCommit) {
       System.out.printf("* %s starts committing...\n", transaction.name);
       transaction.commitReadsAndWrites();
     }
-    
     System.out.printf("%s%s is %s.\n\n", (toCommit ? "* " : ""), transaction.name, 
         (toCommit ? "committed" : "aborted"));
     
