@@ -14,8 +14,8 @@ class Transaction {
   final boolean isReadOnly;
   TransactionManager manager;
   ArrayList<LockInfo> locksHolding;
-  HashMap<String, int[]> dbSnapshot;
-  ArrayList<KeyValueRO> readsOfRO;
+  HashMap<String, KeyValueRO> dbSnapshot;  // for read-only transaction
+  ArrayList<KeyValueRO> readsOfRO;  // for read-only transaction
 
   Transaction(String name, int initTime, boolean readOnly, TransactionManager manager) {
     this.name = name;
@@ -39,7 +39,7 @@ class Transaction {
       
       for (int j = 0; j < sites.length; j++) {
         if (sites[j].database.containsKey(item)) {
-          dbSnapshot.put(item, new int[] {sites[j].database.get(item).value, j + 1});
+          dbSnapshot.put(item, new KeyValueRO (item, sites[j].database.get(item).value, j + 1));
           break;
         }
       }

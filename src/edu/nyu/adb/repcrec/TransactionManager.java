@@ -12,8 +12,8 @@ import java.util.LinkedHashSet;
  */
 class TransactionManager {
   HashMap<String, Transaction> transactionMapping;
-  SimulatedSite[] sites;
   HashMap<String, Unfinished> unfinished = new HashMap<>();
+  SimulatedSite[] sites;
 
   void initialize() {
     transactionMapping = new HashMap<String, Transaction>();
@@ -47,10 +47,7 @@ class TransactionManager {
     
     if (transaction.isReadOnly) {
       if (transaction.dbSnapshot.containsKey(key)) {
-//        System.out.printf("%s(RO)\t%s: %d\n", transaction.name, key, 
-//            transaction.dbSnapshot.get(key)[0]);
-        int[] value = transaction.dbSnapshot.get(key);
-        transaction.readsOfRO.add(new KeyValueRO(key, value[0], value[1]));
+        transaction.readsOfRO.add(transaction.dbSnapshot.get(key));
       } else {
         abort(transaction);
       }
