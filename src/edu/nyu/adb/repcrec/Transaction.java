@@ -50,8 +50,8 @@ class Transaction {
         lockInfo.itemInfo.value = lockInfo.value;
         lockInfo.itemInfo.isReadReady = true;
       } else if (lockInfo.isValid && lockInfo.lockType == LockType.READ) {
-        System.out.print("Read by " + lockInfo.transaction.name + ", ");
-        print(lockInfo.itemInfo.key, lockInfo.itemInfo.value, lockInfo.site.siteID);
+        System.out.printf("- %s: %d, site: %d\n", lockInfo.itemInfo.key, lockInfo.itemInfo.value, 
+            lockInfo.site.siteID);
       }
     }
   }

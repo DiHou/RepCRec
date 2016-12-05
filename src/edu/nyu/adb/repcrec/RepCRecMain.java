@@ -6,7 +6,7 @@ public class RepCRecMain {
     if (args.length < 0) {
       return;
     }
-    System.out.println("Input file: " + args[0]);
+    System.out.printf("Executing %s\n\n", args[0]);
     
     TransactionManager tm = new TransactionManager();
     tm.initialize();
