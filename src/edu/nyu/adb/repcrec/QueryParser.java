@@ -7,7 +7,7 @@ import java.io.IOException;
 /**
  * Package access level, not intended to expose for public use.
  *  
- * @author yanghui
+ * @author di
  */
 class QueryParser {
   int time = 0;
@@ -22,7 +22,7 @@ class QueryParser {
     
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
       while ((readLine = reader.readLine()) != null) {
-        if (readLine.startsWith("//")) {
+        if (readLine.startsWith("//")) {  // Skip comments.
           continue;
         }
         parse(readLine, true);

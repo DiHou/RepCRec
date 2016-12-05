@@ -47,7 +47,8 @@ class TransactionManager {
     
     if (transaction.isReadOnly) {
       if (transaction.dbSnapshot.containsKey(key)) {
-        System.out.printf("%s(RO)\t%s: %d\n", transaction.name, key, transaction.dbSnapshot.get(key)[0]);
+        System.out.printf("%s(RO)\t%s: %d\n", transaction.name, key, 
+            transaction.dbSnapshot.get(key)[0]);
       } else {
         abort(transaction);
       }
@@ -85,7 +86,7 @@ class TransactionManager {
       }
     }
     
-    // No alive site contains the variable, add the query to unfinished list
+    // No alive site contains the variable, add the query to unfinished list.
     if (!foundAlive) {
       unfinished.put(transactionName, new Unfinished(transactionName, true, key));
     }
@@ -95,7 +96,7 @@ class TransactionManager {
     Transaction transaction = transactionMapping.get(transactionName);
     
     if (transaction == null) {
-      return;
+      return;  //simply ignore it
     }
     
     boolean foundAlive = false;
@@ -105,6 +106,7 @@ class TransactionManager {
       } else if (sites[i].database.containsKey(key)) {
         foundAlive = true;
         ItemInfo itemInfo = sites[i].database.get(key);
+        
         if (!itemInfo.isReadOrWriteLocked()) {    // if the item does not have any lock
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           
@@ -142,13 +144,13 @@ class TransactionManager {
       }
     }
     
+    // No alive site contains the variable, add the query to unfinished list.
     if (!foundAlive) {
       unfinished.put(transactionName, new Unfinished(transactionName, false, key, value));
     }
   }
 
   void abort(Transaction transaction) {
-    unfinished.remove(transaction.name);  // Remove unfinished query if there is any.
     end(transaction, false);
   }
 
@@ -156,21 +158,23 @@ class TransactionManager {
     if (transaction == null) {
       return;
     }
-    
+    unfinished.remove(transaction.name);  // Remove unfinished query if there is any.
     
     // Commit writes if the transaction is to commit.
     if (toCommit) {
-      System.out.printf("%s starts committing...\n", transaction.name);
+      System.out.printf("* %s starts committing...\n", transaction.name);
       transaction.commitReadsAndWrites();
     }
     
-    System.out.printf("%s is %s\n\n", transaction.name, (toCommit ? "committed" : "aborted"));
+    System.out.printf("%s%s is %s.\n\n", (toCommit ? "* " : ""), transaction.name, 
+        (toCommit ? "committed" : "aborted"));
     
     transaction.releaseLocks();
     updateConflicts(transaction.name);
     transactionMapping.remove(transaction.name);
   }
 
+  // Update conflicts on each site when a transaction is committed / aborted.
   void updateConflicts(String transactionName) {
     for (int i = 0; i < sites.length; i++) {
       sites[i].updateConflicts(transactionName);
@@ -194,10 +198,14 @@ class TransactionManager {
       }
       
       abort(youngest);
+      
+      // Recursively check and handle deadlock until no cycle is left.
+      // (Sometimes there are multiple cycles.)
+      deadLockCheckAndHandle();
     }
   }
   
-  HashSet<Conflict> constructConflicts() {
+  private HashSet<Conflict> constructConflicts() {
     HashSet<Conflict> result = new HashSet<>();
     
     for (int i = 0; i < sites.length; i++) {
@@ -211,7 +219,7 @@ class TransactionManager {
     return result;
   }
   
-  HashSet<String> detectDeadlockCycle(HashSet<Conflict> conflicts) {
+  private HashSet<String> detectDeadlockCycle(HashSet<Conflict> conflicts) {
     HashSet<String> visitedAll = new HashSet<>();
     HashSet<String> waitings = new HashSet<>();
     HashMap<String, ArrayList<String>> map = new HashMap<>();
@@ -236,7 +244,8 @@ class TransactionManager {
     
     return null;
   }
-  
+
+  // This is the Depth First Search algorithm to detect the cycle.
   private boolean dfs(String waiting, LinkedHashSet<String> visited, HashSet<String> visitedAll, 
       HashMap<String, ArrayList<String>> map, HashSet<String> deadLockCycle) {
     if (visited.contains(waiting)) {
@@ -263,9 +272,11 @@ class TransactionManager {
     
     return false;
   }
-  
+
   private void getCycle(LinkedHashSet<String> visited, String head, HashSet<String> deadLockCycle) {
     boolean started = false;
+    
+    // The input cycle may be shape of "q", we need to get the "o" part out.
     for (String s: visited) {
       if (started == false) {
         if (head.equals(s)) {
@@ -279,6 +290,7 @@ class TransactionManager {
       }
     }
   }
+
   void fail(int siteNumber) {
     sites[siteNumber - 1].fail();
   }
@@ -308,9 +320,4 @@ class TransactionManager {
     
     System.out.println();
   }
-  
-
-//  void print(String item, int value, int siteNumber) {
-//    System.out.println(item + ": " + value + " at site " + siteNumber);
-//  }
 }

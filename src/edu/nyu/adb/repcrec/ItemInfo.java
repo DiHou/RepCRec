@@ -57,16 +57,15 @@ class ItemInfo {
     return lockList;
   }
 
-  // Remove invalid locks of which transaction is aborted or site is down on locklist.
   void validateLockList() {
     validateLock(lockList);
   }
 
-  // Remove invalid locks of which transaction is aborted or site is down on waitlist.
   void validateWaitList() {
     validateLock(waitList);
   }
 
+  // Remove invalid locks of which transaction is aborted or site is down.
   private void validateLock(ArrayList<LockInfo> list) {
     for (int i = 0; i < list.size();) {
       LockInfo lock = list.get(i);

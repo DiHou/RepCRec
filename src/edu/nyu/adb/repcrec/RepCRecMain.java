@@ -1,5 +1,11 @@
 package edu.nyu.adb.repcrec;
 
+/**
+ * Only this main class is public, other classes are used only within this package.
+ * 
+ * @author Yanghui Zhuang, N16904649; Di Hou, N14316306
+ * Date: 2016-12-04
+ */
 public class RepCRecMain {
 
   public static void main(String[] args) {

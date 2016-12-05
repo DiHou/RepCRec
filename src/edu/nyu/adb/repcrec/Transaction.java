@@ -6,7 +6,7 @@ import java.util.HashMap;
 /**
  * Package access level, not intended to expose for public use.
  *  
- * @author yanghui
+ * @author di
  */
 class Transaction {
   final String name;
@@ -27,7 +27,7 @@ class Transaction {
       createDatabaseSnapshot();
     }
   }
-  
+
   private void createDatabaseSnapshot() {
     this.dbSnapshot = new HashMap<>();
     
@@ -43,27 +43,25 @@ class Transaction {
       }
     }
   }
-  
-  void commitReadsAndWrites() {  // Defer all read and write until now, when the transaction commits.
+
+  // Defer all read and write until now, when the transaction commits.
+  void commitReadsAndWrites() {
     for (LockInfo lockInfo : locksHolding) {
       if (lockInfo.isValid && lockInfo.lockType == LockType.WRITE) {
         lockInfo.itemInfo.value = lockInfo.value;
         lockInfo.itemInfo.isReadReady = true;
       } else if (lockInfo.isValid && lockInfo.lockType == LockType.READ) {
-        System.out.printf("- %s: %d, site: %d\n", lockInfo.itemInfo.key, lockInfo.itemInfo.value, 
+        System.out.printf("*   %s: %d, site: %d\n", lockInfo.itemInfo.key, lockInfo.itemInfo.value, 
             lockInfo.site.siteID);
       }
     }
   }
 
-  void releaseLocks() {  // Release locks and update item lock status.
+  // Release locks and update item lock status.
+  void releaseLocks() {
     for (LockInfo lock : locksHolding) {
       lock.isValid = false;
       lock.itemInfo.updateItemLockStatus();
     }
-  }
-  
-  void print(String key, int value, int siteNumber) {
-    System.out.println(key + ": " + value + " at site " + siteNumber);
   }
 }
