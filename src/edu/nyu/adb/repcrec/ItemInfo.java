@@ -71,31 +71,33 @@ class ItemInfo {
     validateLockers();
     validateWaitList();
     
-    if (lockers.size() == 0 && waitList.size() > 0) {
-      if (waitList.get(0).lockType == LockType.WRITE) {
-        LockInfo currentLock = waitList.remove(0);
-        lockers.add(currentLock);
-        
-        int i = 0;
-        while (waitList.size() >= i + 1) {
-          if (waitList.get(i).transaction.name.equals(currentLock.transaction.name)) {
-            LockInfo readLockInfo = waitList.remove(i);
-            readLockInfo.value = currentLock.value;
-            lockers.add(readLockInfo);
-          } else {
-            i++;
-          }
+    if (lockers.size() != 0 || waitList.size() == 0) {
+      return;
+    }
+    
+    if (waitList.get(0).lockType == LockType.WRITE) {
+      LockInfo currentLock = waitList.remove(0);
+      lockers.add(currentLock);
+      
+      int i = 0;
+      while (waitList.size() >= i + 1) {
+        if (waitList.get(i).transaction.name.equals(currentLock.transaction.name)) {
+          LockInfo readLockInfo = waitList.remove(i);
+          readLockInfo.value = currentLock.value;
+          lockers.add(readLockInfo);
+        } else {
+          i++;
         }
-      } else {
-        int i = 0;
-        while (waitList.size() >= i + 1) {
-          if (waitList.get(i).lockType == LockType.READ) {
-            LockInfo readLockInfo = waitList.remove(i);
-            readLockInfo.value = readLockInfo.site.database.get(readLockInfo.itemInfo.key).value;
-            lockers.add(readLockInfo);
-          } else {
-            i++;
-          }
+      }
+    } else {
+      int i = 0;
+      while (waitList.size() >= i + 1) {
+        if (waitList.get(i).lockType == LockType.READ) {
+          LockInfo readLockInfo = waitList.remove(i);
+          readLockInfo.value = readLockInfo.site.database.get(readLockInfo.itemInfo.key).value;
+          lockers.add(readLockInfo);
+        } else {
+          i++;
         }
       }
     }
@@ -103,6 +105,6 @@ class ItemInfo {
   
   @Override
   public String toString() {
-    return key + ": " + value;
+    return String.format("%s: %s", key, value);
   }
 }

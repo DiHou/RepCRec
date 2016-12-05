@@ -15,6 +15,7 @@ class Transaction {
   TransactionManager manager;
   ArrayList<LockInfo> locksHolding;
   HashMap<String, int[]> dbSnapshot;
+  ArrayList<LockInfo> readsOfRO;
 
   Transaction(String name, int initTime, boolean readOnly, TransactionManager manager) {
     this.name = name;
@@ -25,6 +26,7 @@ class Transaction {
     
     if (readOnly) {
       createDatabaseSnapshot();
+      readsOfRO = new ArrayList<>();
     }
   }
 

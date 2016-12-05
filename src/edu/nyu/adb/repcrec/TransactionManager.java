@@ -212,7 +212,7 @@ class TransactionManager {
     }
     
 //    for (Conflict conflict: result) {
-//      System.out.println("Conflict: " + conflict.waiting + " -> " + conflict.waited);
+//      System.out.println(conflict);
 //    }
     
     return result;

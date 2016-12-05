@@ -1,7 +1,7 @@
 package edu.nyu.adb.repcrec;
 
 /**
- * This is the lock information stored in lockTable of each SimulatedSite.
+ * This is the lock information stored in lockTable of each SimulatedSite and each item.
  * Package access level, not intended to expose for public use.
  *  
  * @author yanghui

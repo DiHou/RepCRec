@@ -10,7 +10,7 @@ import java.io.IOException;
  * @author di
  */
 class QueryParser {
-  int time = 0;
+  int time = 0;  // logical time
   final TransactionManager manager;
   
   QueryParser(TransactionManager manager) {
@@ -22,10 +22,9 @@ class QueryParser {
     
     try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
       while ((readLine = reader.readLine()) != null) {
-        if (readLine.startsWith("//")) {  // Skip comments.
-          continue;
+        if (!readLine.startsWith("//")) {  // Skip comments.
+          parse(readLine, true);
         }
-        parse(readLine, true);
       }
     } catch (IOException ioe) {
       System.err.println("Error encountered when parse file.");
@@ -77,6 +76,8 @@ class QueryParser {
       manager.dump(query.substring(5, query.length() - 1));
     } else if (query.startsWith("dump(")) {
       manager.sites[Integer.parseInt(query.substring(5, query.length() - 1)) - 1].dump();
+    } else {
+      // ignore illegal query
     }
   }
 }
