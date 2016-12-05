@@ -97,7 +97,7 @@ class SimulatedSite {
   }
   
 
-  boolean isReplicated(String name) {
+  private boolean isReplicated(String name) {
     int index = Integer.parseInt(name.substring(1, name.length()));
     return index % 2 == 0 ? true : false;
   }
