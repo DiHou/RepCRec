@@ -73,13 +73,13 @@ class TransactionManager {
           if (itemInfo.isWriteLocked()) {
             LockInfo writeLock = itemInfo.getWriteLockInfo();
             if (writeLock.transaction.name.equals(transaction.name)) {  // it is locked by self
-              itemInfo.lockList.add(lock);
+              itemInfo.lockers.add(lock);
             } else {
               itemInfo.waitList.add(lock);
               sites[i].conflicts.add(new Conflict(transactionName, writeLock.transaction.name));
             }
           } else {
-            itemInfo.lockList.add(lock);
+            itemInfo.lockers.add(lock);
           }
           break;
         }
@@ -110,11 +110,11 @@ class TransactionManager {
         if (!itemInfo.isReadOrWriteLocked()) {    // if the item does not have any lock
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           
-          itemInfo.lockList.add(lock);
+          itemInfo.lockers.add(lock);
           sites[i].lockTable.add(lock);
           transaction.locksHolding.add(lock);
         } else {
-          ArrayList<LockInfo> lockList = itemInfo.getLockList();
+          ArrayList<LockInfo> lockList = itemInfo.getLockers();
           
           // Check whether only itself owns the lock.
           boolean lockOnlyOwnedBySelf = true;
@@ -128,7 +128,7 @@ class TransactionManager {
           
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           if (lockOnlyOwnedBySelf) {
-            itemInfo.lockList.add(lock);
+            itemInfo.lockers.add(lock);
           } else {
             itemInfo.waitList.add(lock);
             for (int j = 0; j < lockListSize; j++) {

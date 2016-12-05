@@ -18,7 +18,16 @@ class SimulatedSite {
   HashSet<Conflict> conflicts;
   boolean isDown;
 
-  // Update conflicts when some transaction commits / aborts.
+  SimulatedSite(int siteID, TransactionManager manager) {
+    this.siteID = siteID;
+    this.manager = manager;
+    this.database = new HashMap<String, ItemInfo>();
+    this.lockTable = new ArrayList<LockInfo>();
+    this.conflicts = new HashSet<>();
+    this.isDown = false;
+  }
+
+  // Update conflicts when some transaction is committed / aborted.
   void updateConflicts(String transactionName) {
     HashSet<Conflict> newConflicts = new HashSet<>();
     for (Conflict conflict: conflicts) {
@@ -30,43 +39,6 @@ class SimulatedSite {
     conflicts = newConflicts;
   }
 
-  SimulatedSite(int siteID, TransactionManager manager) {
-    this.siteID = siteID;
-    this.manager = manager;
-    this.database = new HashMap<String, ItemInfo>();
-    this.lockTable = new ArrayList<LockInfo>();
-    this.conflicts = new HashSet<>();
-    this.isDown = false;
-  }
-
-  // print all items
-  void dump() {
-    System.out.printf("dumping site %d...\n", siteID);
-    
-    for (int i = 1; i <= 20; i++) {
-      String item = "x" + i;
-      
-      if (database.containsKey(item)) {
-        ItemInfo itemInfo = database.get(item);
-        if (itemInfo.isReadReady) {
-          System.out.printf("- %s\n", itemInfo.toString());
-        }
-      }
-    }
-    
-    System.out.println();
-  }
-
-  // print a specific item
-  void dump(String key) {
-    if (database.containsKey(key)) {
-      ItemInfo itemInfo = database.get(key);
-      if (itemInfo.isReadReady) {
-        System.out.printf("- %s, site: %d\n", itemInfo.toString(), siteID);
-      }
-    }
-  }
-  
   // Mark all the locks invalid, clear lockTable and conflict when a site fails.
   void fail() {
     isDown = true;
@@ -100,5 +72,33 @@ class SimulatedSite {
   private boolean isReplicated(String name) {
     int index = Integer.parseInt(name.substring(1, name.length()));
     return index % 2 == 0 ? true : false;
+  }
+
+  // print all items
+  void dump() {
+    System.out.printf("dumping site %d...\n", siteID);
+    
+    for (int i = 1; i <= 20; i++) {
+      String item = "x" + i;
+      
+      if (database.containsKey(item)) {
+        ItemInfo itemInfo = database.get(item);
+        if (itemInfo.isReadReady) {
+          System.out.printf("- %s\n", itemInfo.toString());
+        }
+      }
+    }
+    
+    System.out.println();
+  }
+
+  // print a specific item
+  void dump(String key) {
+    if (database.containsKey(key)) {
+      ItemInfo itemInfo = database.get(key);
+      if (itemInfo.isReadReady) {
+        System.out.printf("- %s, site: %d\n", itemInfo.toString(), siteID);
+      }
+    }
   }
 }
