@@ -39,10 +39,10 @@ class TransactionManager {
     transactionMapping.put(name, new Transaction(name, time, isReadOnly, this));
   }
 
-  void read(String transactionName, String key) {
+  boolean read(String transactionName, String key) {
     Transaction transaction = transactionMapping.get(transactionName);
     if (transaction == null) {
-      return;  //simply ignore it
+      return true;  //simply ignore it
     }
     
     if (transaction.isReadOnly) {
@@ -51,7 +51,7 @@ class TransactionManager {
       } else {
         abort(transaction);
       }
-      return;
+      return true;
     }
     
     // If the transaction is not read-only, get its value from an alive site which stores its 
@@ -88,14 +88,16 @@ class TransactionManager {
     // No alive site contains the variable, add the query to unfinished list.
     if (!foundAlive) {
       unfinished.put(transactionName, new Unfinished(transactionName, true, key));
+      return false;
     }
+    return true;
   }
 
-  void write(String transactionName, String key, int value) {
+  boolean write(String transactionName, String key, int value) {
     Transaction transaction = transactionMapping.get(transactionName);
     
     if (transaction == null) {
-      return;  //simply ignore it
+      return true;  //simply ignore it
     }
     
     boolean foundAlive = false;
@@ -145,7 +147,9 @@ class TransactionManager {
     // No alive site contains the variable, add the query to unfinished list.
     if (!foundAlive) {
       unfinished.put(transactionName, new Unfinished(transactionName, false, key, value));
+      return false;
     }
+    return true;
   }
 
   void abort(Transaction transaction) {

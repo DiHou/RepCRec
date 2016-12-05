@@ -3,6 +3,7 @@ package edu.nyu.adb.repcrec;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashSet;
 
 /**
  * Package access level, not intended to expose for public use.
@@ -36,13 +37,7 @@ class QueryParser {
       time++;
       
       // Try unfinished queries first, as a site may recover.
-      for (Unfinished unfinished: manager.unfinished.values()) {
-        if (unfinished.isRead) {
-          manager.read(unfinished.transactionName, unfinished.key);
-        } else {
-          manager.write(unfinished.transactionName, unfinished.key, unfinished.value);
-        }
-      }
+      executeUnfinished();
     }
     String query = input.replaceAll(" ", "");
     
@@ -78,6 +73,26 @@ class QueryParser {
       manager.sites[Integer.parseInt(query.substring(5, query.length() - 1)) - 1].dump();
     } else {
       // ignore illegal query
+    }
+  }
+  
+  private void executeUnfinished() {
+    HashSet<String> finished = new HashSet<>();
+    for (Unfinished unfinished: manager.unfinished.values()) {
+      boolean succeed = false;
+      if (unfinished.isRead) {
+        succeed = manager.read(unfinished.transactionName, unfinished.key);
+      } else {
+        succeed = manager.write(unfinished.transactionName, unfinished.key, unfinished.value);
+      }
+      
+      if (succeed) {
+        finished.add(unfinished.transactionName);
+      }
+    }
+    
+    for (String s: finished) {
+      manager.unfinished.remove(s);
     }
   }
 }
