@@ -194,6 +194,10 @@ class TransactionManager {
       }
       
       abort(youngest);
+      
+      // Recursively check and handle deadlock until no cycles left.
+      // (Sometimes there are multiple cycles.)
+      deadLockCheckAndHandle();
     }
   }
   
