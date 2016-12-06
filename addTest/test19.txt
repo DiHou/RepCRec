@@ -1,0 +1,20 @@
+//test read from and write to a recovered site
+begin(T1)
+begin(T2)
+fail(1)
+fail(2)
+recover(1)
+recover(2)
+//now x2 should skip site 1&2 and read from site3
+R(T1,x2)
+//write to recovered site is ok
+W(T1,x2, 202)
+end(T1)
+//read non-replicated x1 from recovered site2 is ok, should read 10
+R(T2,x1)
+//read from committed x2:202 at site1
+R(T2,x2)
+W(T2,x4, 404)
+W(T2,x11, 111)
+end(T2)
+dump()
