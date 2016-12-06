@@ -34,4 +34,9 @@ class Conflict {
   public int hashCode() {
     return 31 * waiting.hashCode() + waited.hashCode();
   }
+  
+  @Override
+  public String toString() {
+    return String.format("Conflict: %s -> %s", waiting, waited);
+  }
 }

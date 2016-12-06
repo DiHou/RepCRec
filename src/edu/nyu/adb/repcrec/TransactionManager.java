@@ -12,8 +12,8 @@ import java.util.LinkedHashSet;
  */
 class TransactionManager {
   HashMap<String, Transaction> transactionMapping;
-  SimulatedSite[] sites;
   HashMap<String, Unfinished> unfinished = new HashMap<>();
+  SimulatedSite[] sites;
 
   void initialize() {
     transactionMapping = new HashMap<String, Transaction>();
@@ -39,20 +39,19 @@ class TransactionManager {
     transactionMapping.put(name, new Transaction(name, time, isReadOnly, this));
   }
 
-  void read(String transactionName, String key) {
+  boolean read(String transactionName, String key) {
     Transaction transaction = transactionMapping.get(transactionName);
     if (transaction == null) {
-      return;  //simply ignore it
+      return true;  //simply ignore it
     }
     
     if (transaction.isReadOnly) {
       if (transaction.dbSnapshot.containsKey(key)) {
-        System.out.printf("%s(RO)\t%s: %d\n", transaction.name, key, 
-            transaction.dbSnapshot.get(key)[0]);
+        transaction.readsOfRO.add(transaction.dbSnapshot.get(key));
       } else {
         abort(transaction);
       }
-      return;
+      return true;
     }
     
     // If the transaction is not read-only, get its value from an alive site which stores its 
@@ -70,16 +69,16 @@ class TransactionManager {
           transaction.locksHolding.add(lock);
           sites[i].lockTable.add(lock);
           
-          if (itemInfo.isWriteLocked()) {
-            LockInfo writeLock = itemInfo.getWriteLockInfo();
+          LockInfo writeLock = itemInfo.getWriteLockInfo();
+          if (writeLock != null) {  // the item is write-locked
             if (writeLock.transaction.name.equals(transaction.name)) {  // it is locked by self
-              itemInfo.lockList.add(lock);
+              itemInfo.lockers.add(lock);
             } else {
               itemInfo.waitList.add(lock);
               sites[i].conflicts.add(new Conflict(transactionName, writeLock.transaction.name));
             }
           } else {
-            itemInfo.lockList.add(lock);
+            itemInfo.lockers.add(lock);
           }
           break;
         }
@@ -89,14 +88,16 @@ class TransactionManager {
     // No alive site contains the variable, add the query to unfinished list.
     if (!foundAlive) {
       unfinished.put(transactionName, new Unfinished(transactionName, true, key));
+      return false;
     }
+    return true;
   }
 
-  void write(String transactionName, String key, int value) {
+  boolean write(String transactionName, String key, int value) {
     Transaction transaction = transactionMapping.get(transactionName);
     
     if (transaction == null) {
-      return;  //simply ignore it
+      return true;  //simply ignore it
     }
     
     boolean foundAlive = false;
@@ -107,15 +108,14 @@ class TransactionManager {
         foundAlive = true;
         ItemInfo itemInfo = sites[i].database.get(key);
         
-        if (!itemInfo.isReadOrWriteLocked()) {    // if the item does not have any lock
+        ArrayList<LockInfo> lockList = itemInfo.getLockers();
+        if (lockList.size() == 0) {    // if the item does not have any lock
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           
-          itemInfo.lockList.add(lock);
+          itemInfo.lockers.add(lock);
           sites[i].lockTable.add(lock);
           transaction.locksHolding.add(lock);
         } else {
-          ArrayList<LockInfo> lockList = itemInfo.getLockList();
-          
           // Check whether only itself owns the lock.
           boolean lockOnlyOwnedBySelf = true;
           int lockListSize = lockList.size();
@@ -128,12 +128,13 @@ class TransactionManager {
           
           LockInfo lock = new LockInfo(transaction, itemInfo, sites[i], LockType.WRITE, value, true);
           if (lockOnlyOwnedBySelf) {
-            itemInfo.lockList.add(lock);
+            itemInfo.lockers.add(lock);
           } else {
             itemInfo.waitList.add(lock);
             for (int j = 0; j < lockListSize; j++) {
               if (!transactionName.equals(lockList.get(j).transaction.name)) {
-                sites[i].conflicts.add(new Conflict(transactionName, lockList.get(j).transaction.name));
+                sites[i].conflicts.add(
+                    new Conflict(transactionName, lockList.get(j).transaction.name));
               }
             }
           }
@@ -147,7 +148,9 @@ class TransactionManager {
     // No alive site contains the variable, add the query to unfinished list.
     if (!foundAlive) {
       unfinished.put(transactionName, new Unfinished(transactionName, false, key, value));
+      return false;
     }
+    return true;
   }
 
   void abort(Transaction transaction) {
@@ -160,12 +163,24 @@ class TransactionManager {
     }
     unfinished.remove(transaction.name);  // Remove unfinished query if there is any.
     
-    // Commit writes if the transaction is to commit.
+    // Commit or abort for read-only transaction.
+    if (transaction.isReadOnly) {
+      if (toCommit) {
+        System.out.printf("* %s(RO) starts committing...\n", transaction.name);
+        transaction.commitReadsAndWritesRO();
+      }
+      transaction.readsOfRO.clear();
+      transactionMapping.remove(transaction.name);
+      System.out.printf("%s%s(RO) is %s.\n\n", (toCommit ? "* " : ""), transaction.name, 
+          (toCommit ? "committed" : "aborted"));
+      return;
+    }
+    
+    // Commit or abort for read-write transaction.
     if (toCommit) {
       System.out.printf("* %s starts committing...\n", transaction.name);
       transaction.commitReadsAndWrites();
     }
-    
     System.out.printf("%s%s is %s.\n\n", (toCommit ? "* " : ""), transaction.name, 
         (toCommit ? "committed" : "aborted"));
     
@@ -213,7 +228,7 @@ class TransactionManager {
     }
     
 //    for (Conflict conflict: result) {
-//      System.out.println("Conflict: " + conflict.waiting + " -> " + conflict.waited);
+//      System.out.println(conflict);
 //    }
     
     return result;
@@ -302,9 +317,9 @@ class TransactionManager {
   // dump all items in each site
   void dump() {
     for (int i = 0; i < sites.length; i++) {
-      if (!sites[i].isDown) {
+//      if (!sites[i].isDown) {
         sites[i].dump();
-      }
+//      }
     }
   }
 
@@ -313,9 +328,9 @@ class TransactionManager {
     System.out.printf("dumping item %s...\n", key);
     
     for (int i = 0; i < sites.length; i++) {
-      if (!sites[i].isDown) {
+//      if (!sites[i].isDown) {
         sites[i].dump(key);
-      }
+//      }
     }
     
     System.out.println();

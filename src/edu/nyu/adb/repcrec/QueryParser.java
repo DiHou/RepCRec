@@ -1,8 +1,9 @@
 package edu.nyu.adb.repcrec;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Scanner;
 
 /**
  * Package access level, not intended to expose for public use.
@@ -10,7 +11,7 @@ import java.io.IOException;
  * @author di
  */
 class QueryParser {
-  int time = 0;
+  int time = 0;  // logical time
   final TransactionManager manager;
   
   QueryParser(TransactionManager manager) {
@@ -20,12 +21,12 @@ class QueryParser {
   void startParsing(String file) {
     String readLine = null;
     
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-      while ((readLine = reader.readLine()) != null) {
-        if (readLine.startsWith("//")) {  // Skip comments.
-          continue;
+    try (Scanner scanner = new Scanner(new File(file))) {
+      while (scanner.hasNextLine()) {
+        readLine = scanner.nextLine();
+        if (!readLine.startsWith("//")) {  // Skip comments.
+          parse(readLine, true);
         }
-        parse(readLine, true);
       }
     } catch (IOException ioe) {
       System.err.println("Error encountered when parse file.");
@@ -37,13 +38,7 @@ class QueryParser {
       time++;
       
       // Try unfinished queries first, as a site may recover.
-      for (Unfinished unfinished: manager.unfinished.values()) {
-        if (unfinished.isRead) {
-          manager.read(unfinished.transactionName, unfinished.key);
-        } else {
-          manager.write(unfinished.transactionName, unfinished.key, unfinished.value);
-        }
-      }
+      executeUnfinished();
     }
     String query = input.replaceAll(" ", "");
     
@@ -77,6 +72,28 @@ class QueryParser {
       manager.dump(query.substring(5, query.length() - 1));
     } else if (query.startsWith("dump(")) {
       manager.sites[Integer.parseInt(query.substring(5, query.length() - 1)) - 1].dump();
+    } else {
+      // ignore illegal query
+    }
+  }
+  
+  private void executeUnfinished() {
+    HashSet<String> finished = new HashSet<>();
+    for (Unfinished unfinished: manager.unfinished.values()) {
+      boolean succeed = false;
+      if (unfinished.isRead) {
+        succeed = manager.read(unfinished.transactionName, unfinished.key);
+      } else {
+        succeed = manager.write(unfinished.transactionName, unfinished.key, unfinished.value);
+      }
+      
+      if (succeed) {
+        finished.add(unfinished.transactionName);
+      }
+    }
+    
+    for (String s: finished) {
+      manager.unfinished.remove(s);
     }
   }
 }

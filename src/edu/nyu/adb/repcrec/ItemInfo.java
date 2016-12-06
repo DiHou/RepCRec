@@ -12,33 +12,21 @@ class ItemInfo {
   String key;
   int value;
   boolean isReadReady;
-  ArrayList<LockInfo> lockList;
+  ArrayList<LockInfo> lockers;
   ArrayList<LockInfo> waitList;
 
   ItemInfo(String name, int value) {
     this.key = name;
     this.value = value;
     this.isReadReady = true;
-    this.lockList = new ArrayList<LockInfo>();
+    this.lockers = new ArrayList<LockInfo>();
     this.waitList = new ArrayList<LockInfo>();
   }
 
-  boolean isWriteLocked() {
-    validateLockList();
-    
-    for (LockInfo lock: lockList) {
-      if (lock.lockType == LockType.WRITE) {
-        return true;
-      }
-    }
-    
-    return false;
-  }
-
   LockInfo getWriteLockInfo() {
-    validateLockList();
+    validateLockers();
     
-    for (LockInfo lockInfo: lockList) {
+    for (LockInfo lockInfo: lockers) {
       if (lockInfo.lockType == LockType.WRITE) {
         return lockInfo;
       }
@@ -47,26 +35,21 @@ class ItemInfo {
     return null;
   }
 
-  boolean isReadOrWriteLocked() {
-    validateLockList();
-    return lockList.size() != 0;
+  ArrayList<LockInfo> getLockers() {
+    validateLockers();
+    return lockers;
   }
 
-  ArrayList<LockInfo> getLockList() {
-    validateLockList();
-    return lockList;
-  }
-
-  void validateLockList() {
-    validateLock(lockList);
+  void validateLockers() {
+    validate(lockers);
   }
 
   void validateWaitList() {
-    validateLock(waitList);
+    validate(waitList);
   }
 
   // Remove invalid locks of which transaction is aborted or site is down.
-  private void validateLock(ArrayList<LockInfo> list) {
+  private void validate(ArrayList<LockInfo> list) {
     for (int i = 0; i < list.size();) {
       LockInfo lock = list.get(i);
       if (!lock.isValid) {
@@ -85,34 +68,36 @@ class ItemInfo {
    *     transaction.
    */
   void updateItemLockStatus() {
-    validateLockList();
+    validateLockers();
     validateWaitList();
     
-    if (lockList.size() == 0 && waitList.size() > 0) {
-      if (waitList.get(0).lockType == LockType.WRITE) {
-        LockInfo currentLock = waitList.remove(0);
-        lockList.add(currentLock);
-        
-        int i = 0;
-        while (waitList.size() >= i + 1) {
-          if (waitList.get(i).transaction.name.equals(currentLock.transaction.name)) {
-            LockInfo readLockInfo = waitList.remove(i);
-            readLockInfo.value = currentLock.value;
-            lockList.add(readLockInfo);
-          } else {
-            i++;
-          }
+    if (lockers.size() != 0 || waitList.size() == 0) {
+      return;
+    }
+    
+    if (waitList.get(0).lockType == LockType.WRITE) {
+      LockInfo currentLock = waitList.remove(0);
+      lockers.add(currentLock);
+      
+      int i = 0;
+      while (waitList.size() >= i + 1) {
+        if (waitList.get(i).transaction.name.equals(currentLock.transaction.name)) {
+          LockInfo readLockInfo = waitList.remove(i);
+          readLockInfo.value = currentLock.value;
+          lockers.add(readLockInfo);
+        } else {
+          i++;
         }
-      } else {
-        int i = 0;
-        while (waitList.size() >= i + 1) {
-          if (waitList.get(i).lockType == LockType.READ) {
-            LockInfo readLockInfo = waitList.remove(i);
-            readLockInfo.value = readLockInfo.site.database.get(readLockInfo.itemInfo.key).value;
-            lockList.add(readLockInfo);
-          } else {
-            i++;
-          }
+      }
+    } else {
+      int i = 0;
+      while (waitList.size() >= i + 1) {
+        if (waitList.get(i).lockType == LockType.READ) {
+          LockInfo readLockInfo = waitList.remove(i);
+          readLockInfo.value = readLockInfo.site.database.get(readLockInfo.itemInfo.key).value;
+          lockers.add(readLockInfo);
+        } else {
+          i++;
         }
       }
     }
@@ -120,6 +105,6 @@ class ItemInfo {
   
   @Override
   public String toString() {
-    return key + ": " + value;
+    return String.format("%s: %s", key, value);
   }
 }

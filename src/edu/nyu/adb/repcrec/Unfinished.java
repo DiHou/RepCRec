@@ -8,7 +8,7 @@ package edu.nyu.adb.repcrec;
 class Unfinished {
   
   String transactionName;
-  boolean isRead;
+  boolean isRead;  // Unfinished is either read or write.
   String key;
   int value;
   
