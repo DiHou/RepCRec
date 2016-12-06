@@ -1,0 +1,464 @@
+--------Result 1---------
+
+T2 is aborted.
+
+* T1 starts committing...
+* T1 is committed.
+
+dumping site 1...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 2...
+- x1: 101
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x11: 110
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 3...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 4...
+- x2: 102
+- x3: 30
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x13: 130
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 5...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 6...
+- x2: 102
+- x4: 40
+- x5: 50
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x15: 150
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 7...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 8...
+- x2: 102
+- x4: 40
+- x6: 60
+- x7: 70
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x17: 170
+- x18: 180
+- x20: 200
+
+dumping site 9...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 10...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x9: 90
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x19: 190
+- x20: 200
+
+
+--------Result 2---------
+
+* T1 starts committing...
+* T1 is committed.
+
+* T2(RO) starts committing...
+*   x2: 20, site: 1
+*   x1: 10, site: 2
+* T2(RO) is committed.
+
+dumping site 1...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 2...
+- x1: 101
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x11: 110
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 3...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 4...
+- x2: 102
+- x3: 30
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x13: 130
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 5...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 6...
+- x2: 102
+- x4: 40
+- x5: 50
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x15: 150
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 7...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 8...
+- x2: 102
+- x4: 40
+- x6: 60
+- x7: 70
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x17: 170
+- x18: 180
+- x20: 200
+
+dumping site 9...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x20: 200
+
+dumping site 10...
+- x2: 102
+- x4: 40
+- x6: 60
+- x8: 80
+- x9: 90
+- x10: 100
+- x12: 120
+- x14: 140
+- x16: 160
+- x18: 180
+- x19: 190
+- x20: 200
+
+
+--------Result 3---------
+
+Site 2 failed.
+* T2 starts committing...
+*   x3: 30, site: 4
+* T2 is committed.
+
+Site 2 is recovered.
+* T1 starts committing...
+*   x3: 30, site: 4
+* T1 is committed.
+
+
+--------Result 4---------
+
+Site 2 failed.
+T1 is aborted.
+
+* T2 starts committing...
+*   x3: 30, site: 4
+* T2 is committed.
+
+Site 2 is recovered.
+
+--------Result 5---------
+
+Site 2 failed.
+T1 is aborted.
+
+* T2 starts committing...
+*   x3: 30, site: 4
+* T2 is committed.
+
+Site 2 is recovered.
+
+--------Result 6---------
+
+Site 3 failed.
+Site 4 failed.
+* T1 starts committing...
+*   x1: 10, site: 2
+* T1 is committed.
+
+Site 4 is recovered.
+Site 3 is recovered.
+* T2 starts committing...
+*   x3: 30, site: 4
+* T2 is committed.
+
+
+--------Result 7---------
+
+* T1 starts committing...
+* T1 is committed.
+
+* T2(RO) starts committing...
+*   x1: 10, site: 2
+*   x2: 20, site: 1
+*   x3: 30, site: 4
+* T2(RO) is committed.
+
+
+--------Result 8---------
+
+* T1 starts committing...
+* T1 is committed.
+
+* T2(RO) starts committing...
+*   x1: 10, site: 2
+*   x2: 20, site: 1
+*   x3: 30, site: 4
+* T2(RO) is committed.
+
+* T3(RO) starts committing...
+*   x3: 33, site: 4
+* T3(RO) is committed.
+
+
+--------Result 9---------
+
+* T2 starts committing...
+* T2 is committed.
+
+* T3 starts committing...
+*   x4: 44, site: 1
+* T3 is committed.
+
+* T1 starts committing...
+*   x2: 22, site: 1
+* T1 is committed.
+
+
+--------Result 10---------
+
+* T2 starts committing...
+* T2 is committed.
+
+* T3 starts committing...
+*   x4: 44, site: 1
+* T3 is committed.
+
+* T1 starts committing...
+*   x2: 22, site: 1
+* T1 is committed.
+
+
+--------Result 11---------
+
+* T1 starts committing...
+*   x2: 20, site: 1
+* T1 is committed.
+
+* T2 starts committing...
+*   x2: 20, site: 1
+* T2 is committed.
+
+
+--------Result 12---------
+
+* T1 starts committing...
+*   x2: 20, site: 1
+* T1 is committed.
+
+* T2 starts committing...
+*   x2: 20, site: 1
+* T2 is committed.
+
+
+--------Result 13---------
+
+* T3 starts committing...
+* T3 is committed.
+
+* T2 starts committing...
+* T2 is committed.
+
+* T1 starts committing...
+* T1 is committed.
+
+
+--------Result 14---------
+
+* T3 starts committing...
+* T3 is committed.
+
+* T1 starts committing...
+* T1 is committed.
+
+* T2 starts committing...
+* T2 is committed.
+
+
+--------Result 15---------
+
+Site 2 failed.
+T1 is aborted.
+
+Site 2 is recovered.
+* T2 starts committing...
+* T2 is committed.
+
+* T3 starts committing...
+* T3 is committed.
+
+* T4 starts committing...
+* T4 is committed.
+
+* T5 starts committing...
+* T5 is committed.
+
+
+--------Result 16---------
+
+* T2 starts committing...
+* T2 is committed.
+
+* T3 starts committing...
+*   x4: 44, site: 1
+* T3 is committed.
+
+* T1 starts committing...
+*   x2: 22, site: 1
+* T1 is committed.
+
+
