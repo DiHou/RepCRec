@@ -83,9 +83,9 @@ class SimulatedSite {
       
       if (database.containsKey(item)) {
         ItemInfo itemInfo = database.get(item);
-        if (itemInfo.isReadReady) {
+//        if (itemInfo.isReadReady) {
           System.out.printf("- %s\n", itemInfo.toString());
-        }
+//        }
       }
     }
     
@@ -96,9 +96,9 @@ class SimulatedSite {
   void dump(String key) {
     if (database.containsKey(key)) {
       ItemInfo itemInfo = database.get(key);
-      if (itemInfo.isReadReady) {
+//      if (itemInfo.isReadReady) {
         System.out.printf("- %s, site: %d\n", itemInfo.toString(), siteID);
-      }
+//      }
     }
   }
 }
