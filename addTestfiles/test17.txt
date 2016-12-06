@@ -1,0 +1,12 @@
+//shared read lock
+begin(T1)
+begin(T2)
+R(T1,x3)
+R(T2,x4)
+R(T1,x5)
+R(T2,x3)
+//T2 should abort, since site1 failed after T2 accessed it
+fail(1)
+end(T1)
+recover(2)
+end(T2)
